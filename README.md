@@ -1,11 +1,6 @@
 Overview
 ========
 
-[![Build Status](https://travis-ci.org/swisspol/GCDWebServer.svg?branch=master)](https://travis-ci.org/swisspol/GCDWebServer)
-[![Version](http://cocoapod-badges.herokuapp.com/v/GCDWebServer/badge.png)](https://cocoapods.org/pods/GCDWebServer)
-[![Platform](http://cocoapod-badges.herokuapp.com/p/GCDWebServer/badge.png)](https://github.com/swisspol/GCDWebServer)
-[![License](http://img.shields.io/cocoapods/l/GCDWebServer.svg)](LICENSE)
-
 GCDWebServer is a modern and lightweight GCD based HTTP 1.1 server designed to be embedded in iOS, macOS & tvOS apps. It was written from scratch with the following goals in mind:
 * Elegant and easy to use architecture with only 4 core classes: server, connection, request and response (see "Understanding GCDWebServer's Architecture" below)
 * Well designed API with fully documented headers for easy integration and customization
