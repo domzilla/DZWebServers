@@ -45,6 +45,7 @@
 		F29A00DD2B82053C00B18853 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F29A00DC2B82053C00B18853 /* CoreServices.framework */; };
 		F29A00DF2B82056100B18853 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F29A00DE2B82056100B18853 /* UIKit.framework */; };
 		F29A00E42B82058300B18853 /* DZWebUploader.bundle in Resources */ = {isa = PBXBuildFile; fileRef = F29A00E32B82058300B18853 /* DZWebUploader.bundle */; };
+		F29A00EB2B8208C500B18853 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F29A00EA2B8208C500B18853 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -89,6 +90,7 @@
 		F29A00E02B82056700B18853 /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/lib/libxml2.tbd; sourceTree = DEVELOPER_DIR; };
 		F29A00E12B82056D00B18853 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/lib/libz.tbd; sourceTree = DEVELOPER_DIR; };
 		F29A00E32B82058300B18853 /* DZWebUploader.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = DZWebUploader.bundle; sourceTree = "<group>"; };
+		F29A00EA2B8208C500B18853 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -157,6 +159,7 @@
 		F29A00E22B82057200B18853 /* Ressources */ = {
 			isa = PBXGroup;
 			children = (
+				F29A00EA2B8208C500B18853 /* PrivacyInfo.xcprivacy */,
 				F29A00E32B82058300B18853 /* DZWebUploader.bundle */,
 			);
 			name = Ressources;
@@ -319,6 +322,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F29A00EB2B8208C500B18853 /* PrivacyInfo.xcprivacy in Resources */,
 				F29A00E42B82058300B18853 /* DZWebUploader.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
