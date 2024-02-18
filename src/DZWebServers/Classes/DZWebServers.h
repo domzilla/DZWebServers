@@ -1,5 +1,6 @@
 /*
  Copyright (c) 2012-2019, Pierre-Olivier Latour
+ Copyright (c) 2024, Dominic Rodemer
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
@@ -24,6 +25,14 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#import <Foundation/Foundation.h>
+
+//! Project version number for BGFoundation.
+FOUNDATION_EXPORT double DZWebServersVersionNumber;
+
+//! Project version string for BGFoundation.
+FOUNDATION_EXPORT const unsigned char DZWebServersVersionString[];
 
 // DZWebServer Core
 #import "DZWebServer.h"
