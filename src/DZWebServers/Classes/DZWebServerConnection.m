@@ -779,7 +779,7 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
 
 - (DZWebServerResponse*)overrideResponse:(DZWebServerResponse*)response forRequest:(DZWebServerRequest*)request {
   if ((response.statusCode >= 200) && (response.statusCode < 300) && _CompareResources(response.eTag, request.ifNoneMatch, response.lastModifiedDate, request.ifModifiedSince)) {
-    NSInteger code = [request.method isEqualToString:@"HEAD"] || [request.method isEqualToString:@"GET"] ? kDZWebServerHTTPStatusCode_NotModified : kDZWebServerHTTPStatusCode_PreconditionFailed;
+    NSInteger code = [request.method isEqualToString:@"HEAD"] || [request.method isEqualToString:@"GET"] ? (NSInteger)kDZWebServerHTTPStatusCode_NotModified : (NSInteger)kDZWebServerHTTPStatusCode_PreconditionFailed;
     DZWebServerResponse* newResponse = [DZWebServerResponse responseWithStatusCode:code];
     newResponse.cacheControlMaxAge = response.cacheControlMaxAge;
     newResponse.lastModifiedDate = response.lastModifiedDate;
