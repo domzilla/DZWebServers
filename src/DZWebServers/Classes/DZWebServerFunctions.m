@@ -175,6 +175,8 @@ NSString* DZWebServerGetMimeTypeForExtension(NSString* extension, NSDictionary<N
     if (mimeType == nil) {
       mimeType = [builtInOverrides objectForKey:extension];
     }
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     if (mimeType == nil) {
       CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (__bridge CFStringRef)extension, NULL);
       if (uti) {
@@ -182,6 +184,7 @@ NSString* DZWebServerGetMimeTypeForExtension(NSString* extension, NSDictionary<N
         CFRelease(uti);
       }
     }
+#pragma clang diagnostic pop
   }
   return mimeType ? mimeType : kDZWebServerDefaultMimeType;
 }
