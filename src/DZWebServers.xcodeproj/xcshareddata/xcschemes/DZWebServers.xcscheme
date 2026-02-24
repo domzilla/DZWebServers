@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1630"
+   LastUpgradeVersion = "2620"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "F29A00892B8204E300B18853"
                BuildableName = "DZWebServers.framework"
-               BlueprintName = "DZWebServers (iOS)"
+               BlueprintName = "DZWebServers"
                ReferencedContainer = "container:DZWebServers.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -51,7 +51,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "F29A00892B8204E300B18853"
             BuildableName = "DZWebServers.framework"
-            BlueprintName = "DZWebServers (iOS)"
+            BlueprintName = "DZWebServers"
             ReferencedContainer = "container:DZWebServers.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
