@@ -1134,6 +1134,22 @@ static inline NSString* _EncodeBase64(NSString* string) {
   va_end(arguments);
 }
 
+- (void)logVerboseMessage:(NSString*)message {
+  DWS_LOG_VERBOSE(@"%@", message);
+}
+
+- (void)logInfoMessage:(NSString*)message {
+  DWS_LOG_INFO(@"%@", message);
+}
+
+- (void)logWarningMessage:(NSString*)message {
+  DWS_LOG_WARNING(@"%@", message);
+}
+
+- (void)logErrorMessage:(NSString*)message {
+  DWS_LOG_ERROR(@"%@", message);
+}
+
 @end
 
 #ifdef __DZWEBSERVER_ENABLE_TESTING__

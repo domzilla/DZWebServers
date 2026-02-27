@@ -13,6 +13,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - `NS_UNAVAILABLE` on `-init`/`+new` where a specific initializer is required (DZWebServerRequest, DZWebServerDataResponse, DZWebServerFileResponse, DZWebServerStreamedResponse, DZWebUploader, DZWebDAVServer)
   - `NS_SWIFT_DISABLE_ASYNC` on `asyncReadDataWithCompletion:` (DZWebServerBodyReader protocol) — block is called multiple times, not a completion handler
   - `NS_SWIFT_NAME` on `DZWebServerGetMimeTypeForExtension()` for better Swift parameter labels
+  - Swift-friendly non-variadic alternatives for C variadic methods invisible to Swift:
+    - `logVerboseMessage:`, `logInfoMessage:`, `logWarningMessage:`, `logErrorMessage:` on DZWebServer (Logging) with `NS_SWIFT_NAME` for clean Swift call sites (`server.logVerbose("msg")`)
+    - `responseWithClientError:formattedMessage:`, `responseWithServerError:formattedMessage:` and `underlyingError:` variants on DZWebServerErrorResponse (factory methods)
+    - `initWithClientError:formattedMessage:`, `initWithServerError:formattedMessage:` and `underlyingError:` variants on DZWebServerErrorResponse with `NS_SWIFT_NAME` for clean initializer syntax
+  - `NS_SWIFT_UNAVAILABLE` on all original C variadic methods pointing to the new Swift-friendly alternatives
 
 ### Changed
 - Added `copy` attribute to all `NSString`, `NSData`, `NSDictionary`, and `NSArray` readonly properties across all public headers for correct value semantics

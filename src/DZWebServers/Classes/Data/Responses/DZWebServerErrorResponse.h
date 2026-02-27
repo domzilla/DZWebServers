@@ -39,46 +39,98 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  *  Creates a client error response with the corresponding HTTP status code.
  */
-+ (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... NS_FORMAT_FUNCTION(2, 3);
++ (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... NS_FORMAT_FUNCTION(2, 3) NS_SWIFT_UNAVAILABLE("Use responseWithClientError:formattedMessage: instead");
+
+/**
+ *  Creates a client error response with the corresponding HTTP status code
+ *  and a pre-formatted message string.
+ */
++ (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode formattedMessage:(NSString*)message;
 
 /**
  *  Creates a server error response with the corresponding HTTP status code.
  */
-+ (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode message:(NSString*)format, ... NS_FORMAT_FUNCTION(2, 3);
++ (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode message:(NSString*)format, ... NS_FORMAT_FUNCTION(2, 3) NS_SWIFT_UNAVAILABLE("Use responseWithServerError:formattedMessage: instead");
+
+/**
+ *  Creates a server error response with the corresponding HTTP status code
+ *  and a pre-formatted message string.
+ */
++ (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode formattedMessage:(NSString*)message;
 
 /**
  *  Creates a client error response with the corresponding HTTP status code
  *  and an underlying NSError.
  */
-+ (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError message:(NSString*)format, ... NS_FORMAT_FUNCTION(3, 4);
++ (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError message:(NSString*)format, ... NS_FORMAT_FUNCTION(3, 4) NS_SWIFT_UNAVAILABLE("Use responseWithClientError:underlyingError:formattedMessage: instead");
+
+/**
+ *  Creates a client error response with the corresponding HTTP status code,
+ *  an underlying NSError, and a pre-formatted message string.
+ */
++ (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError formattedMessage:(NSString*)message;
 
 /**
  *  Creates a server error response with the corresponding HTTP status code
  *  and an underlying NSError.
  */
-+ (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError message:(NSString*)format, ... NS_FORMAT_FUNCTION(3, 4);
++ (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError message:(NSString*)format, ... NS_FORMAT_FUNCTION(3, 4) NS_SWIFT_UNAVAILABLE("Use responseWithServerError:underlyingError:formattedMessage: instead");
+
+/**
+ *  Creates a server error response with the corresponding HTTP status code,
+ *  an underlying NSError, and a pre-formatted message string.
+ */
++ (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError formattedMessage:(NSString*)message;
 
 /**
  *  Initializes a client error response with the corresponding HTTP status code.
  */
-- (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... NS_FORMAT_FUNCTION(2, 3);
+- (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... NS_FORMAT_FUNCTION(2, 3) NS_SWIFT_UNAVAILABLE("Use initWithClientError:formattedMessage: instead");
+
+/**
+ *  Initializes a client error response with the corresponding HTTP status code
+ *  and a pre-formatted message string.
+ */
+- (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode formattedMessage:(NSString*)message
+    NS_SWIFT_NAME(init(clientError:message:));
 
 /**
  *  Initializes a server error response with the corresponding HTTP status code.
  */
-- (instancetype)initWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode message:(NSString*)format, ... NS_FORMAT_FUNCTION(2, 3);
+- (instancetype)initWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode message:(NSString*)format, ... NS_FORMAT_FUNCTION(2, 3) NS_SWIFT_UNAVAILABLE("Use initWithServerError:formattedMessage: instead");
+
+/**
+ *  Initializes a server error response with the corresponding HTTP status code
+ *  and a pre-formatted message string.
+ */
+- (instancetype)initWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode formattedMessage:(NSString*)message
+    NS_SWIFT_NAME(init(serverError:message:));
 
 /**
  *  Initializes a client error response with the corresponding HTTP status code
  *  and an underlying NSError.
  */
-- (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError message:(NSString*)format, ... NS_FORMAT_FUNCTION(3, 4);
+- (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError message:(NSString*)format, ... NS_FORMAT_FUNCTION(3, 4) NS_SWIFT_UNAVAILABLE("Use initWithClientError:underlyingError:formattedMessage: instead");
+
+/**
+ *  Initializes a client error response with the corresponding HTTP status code,
+ *  an underlying NSError, and a pre-formatted message string.
+ */
+- (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError formattedMessage:(NSString*)message
+    NS_SWIFT_NAME(init(clientError:underlyingError:message:));
 
 /**
  *  Initializes a server error response with the corresponding HTTP status code
  *  and an underlying NSError.
  */
-- (instancetype)initWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError message:(NSString*)format, ... NS_FORMAT_FUNCTION(3, 4);
+- (instancetype)initWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError message:(NSString*)format, ... NS_FORMAT_FUNCTION(3, 4) NS_SWIFT_UNAVAILABLE("Use initWithServerError:underlyingError:formattedMessage: instead");
+
+/**
+ *  Initializes a server error response with the corresponding HTTP status code,
+ *  an underlying NSError, and a pre-formatted message string.
+ */
+- (instancetype)initWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError formattedMessage:(NSString*)message
+    NS_SWIFT_NAME(init(serverError:underlyingError:message:));
 
 @end
 

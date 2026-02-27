@@ -598,22 +598,50 @@ extern NSString* const DZWebServerAuthenticationMethod_DigestAccess;
 /**
  *  Logs a message to the logging facility at the VERBOSE level.
  */
-- (void)logVerbose:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2);
+- (void)logVerbose:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2) NS_SWIFT_UNAVAILABLE("Use logVerbose(_:) instead");
+
+/**
+ *  Logs a pre-formatted message to the logging facility at the VERBOSE level.
+ *
+ *  This is the Swift-friendly variant of logVerbose:.
+ */
+- (void)logVerboseMessage:(NSString*)message NS_SWIFT_NAME(logVerbose(_:));
 
 /**
  *  Logs a message to the logging facility at the INFO level.
  */
-- (void)logInfo:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2);
+- (void)logInfo:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2) NS_SWIFT_UNAVAILABLE("Use logInfo(_:) instead");
+
+/**
+ *  Logs a pre-formatted message to the logging facility at the INFO level.
+ *
+ *  This is the Swift-friendly variant of logInfo:.
+ */
+- (void)logInfoMessage:(NSString*)message NS_SWIFT_NAME(logInfo(_:));
 
 /**
  *  Logs a message to the logging facility at the WARNING level.
  */
-- (void)logWarning:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2);
+- (void)logWarning:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2) NS_SWIFT_UNAVAILABLE("Use logWarning(_:) instead");
+
+/**
+ *  Logs a pre-formatted message to the logging facility at the WARNING level.
+ *
+ *  This is the Swift-friendly variant of logWarning:.
+ */
+- (void)logWarningMessage:(NSString*)message NS_SWIFT_NAME(logWarning(_:));
 
 /**
  *  Logs a message to the logging facility at the ERROR level.
  */
-- (void)logError:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2);
+- (void)logError:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2) NS_SWIFT_UNAVAILABLE("Use logError(_:) instead");
+
+/**
+ *  Logs a pre-formatted message to the logging facility at the ERROR level.
+ *
+ *  This is the Swift-friendly variant of logError:.
+ */
+- (void)logErrorMessage:(NSString*)message NS_SWIFT_NAME(logError(_:));
 
 @end
 

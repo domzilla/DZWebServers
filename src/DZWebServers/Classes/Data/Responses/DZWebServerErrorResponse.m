@@ -33,48 +33,68 @@
 
 @implementation DZWebServerErrorResponse
 
+#pragma mark Public (Factory — Swift-friendly)
+#pragma mark ---
+
++ (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode formattedMessage:(NSString*)message {
+  return [(DZWebServerErrorResponse*)[self alloc] initWithClientError:errorCode formattedMessage:message];
+}
+
++ (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode formattedMessage:(NSString*)message {
+  return [(DZWebServerErrorResponse*)[self alloc] initWithServerError:errorCode formattedMessage:message];
+}
+
++ (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError formattedMessage:(NSString*)message {
+  return [(DZWebServerErrorResponse*)[self alloc] initWithClientError:errorCode underlyingError:underlyingError formattedMessage:message];
+}
+
++ (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError formattedMessage:(NSString*)message {
+  return [(DZWebServerErrorResponse*)[self alloc] initWithServerError:errorCode underlyingError:underlyingError formattedMessage:message];
+}
+
+#pragma mark Public (Factory — Variadic)
+#pragma mark ---
+
 + (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
-  DWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
-  DZWebServerErrorResponse* response = [(DZWebServerErrorResponse*)[self alloc] initWithStatusCode:errorCode underlyingError:nil messageFormat:format arguments:arguments];
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
   va_end(arguments);
-  return response;
+  return [self responseWithClientError:errorCode formattedMessage:message];
 }
 
 + (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
-  DWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
-  DZWebServerErrorResponse* response = [(DZWebServerErrorResponse*)[self alloc] initWithStatusCode:errorCode underlyingError:nil messageFormat:format arguments:arguments];
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
   va_end(arguments);
-  return response;
+  return [self responseWithServerError:errorCode formattedMessage:message];
 }
 
 + (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
-  DWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
-  DZWebServerErrorResponse* response = [(DZWebServerErrorResponse*)[self alloc] initWithStatusCode:errorCode underlyingError:underlyingError messageFormat:format arguments:arguments];
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
   va_end(arguments);
-  return response;
+  return [self responseWithClientError:errorCode underlyingError:underlyingError formattedMessage:message];
 }
 
 + (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
-  DWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
-  DZWebServerErrorResponse* response = [(DZWebServerErrorResponse*)[self alloc] initWithStatusCode:errorCode underlyingError:underlyingError messageFormat:format arguments:arguments];
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
   va_end(arguments);
-  return response;
+  return [self responseWithServerError:errorCode underlyingError:underlyingError formattedMessage:message];
 }
+
+#pragma mark Public (Init — Swift-friendly)
+#pragma mark ---
 
 static inline NSString* _EscapeHTMLString(NSString* string) {
   return [string stringByReplacingOccurrencesOfString:@"\"" withString:@"&quot;"];
 }
 
-- (instancetype)initWithStatusCode:(NSInteger)statusCode underlyingError:(NSError*)underlyingError messageFormat:(NSString*)format arguments:(va_list)arguments {
-  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+- (instancetype)initWithStatusCode:(NSInteger)statusCode underlyingError:(NSError*)underlyingError formattedMessage:(NSString*)message {
   NSString* title = [NSString stringWithFormat:@"HTTP Error %i", (int)statusCode];
   NSString* error = underlyingError ? [NSString stringWithFormat:@"[%@] %@ (%li)", underlyingError.domain, _EscapeHTMLString(underlyingError.localizedDescription), (long)underlyingError.code] : @"";
   NSString* html = [NSString stringWithFormat:@"<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>%@</title></head><body><h1>%@: %@</h1><h3>%@</h3></body></html>",
@@ -85,40 +105,59 @@ static inline NSString* _EscapeHTMLString(NSString* string) {
   return self;
 }
 
-- (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
+- (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode formattedMessage:(NSString*)message {
   DWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
+  return [self initWithStatusCode:errorCode underlyingError:nil formattedMessage:message];
+}
+
+- (instancetype)initWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode formattedMessage:(NSString*)message {
+  DWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
+  return [self initWithStatusCode:errorCode underlyingError:nil formattedMessage:message];
+}
+
+- (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError formattedMessage:(NSString*)message {
+  DWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
+  return [self initWithStatusCode:errorCode underlyingError:underlyingError formattedMessage:message];
+}
+
+- (instancetype)initWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError formattedMessage:(NSString*)message {
+  DWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
+  return [self initWithStatusCode:errorCode underlyingError:underlyingError formattedMessage:message];
+}
+
+#pragma mark Public (Init — Variadic)
+#pragma mark ---
+
+- (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  self = [self initWithStatusCode:errorCode underlyingError:nil messageFormat:format arguments:arguments];
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
   va_end(arguments);
-  return self;
+  return [self initWithClientError:errorCode formattedMessage:message];
 }
 
 - (instancetype)initWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
-  DWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
-  self = [self initWithStatusCode:errorCode underlyingError:nil messageFormat:format arguments:arguments];
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
   va_end(arguments);
-  return self;
+  return [self initWithServerError:errorCode formattedMessage:message];
 }
 
 - (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
-  DWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
-  self = [self initWithStatusCode:errorCode underlyingError:underlyingError messageFormat:format arguments:arguments];
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
   va_end(arguments);
-  return self;
+  return [self initWithClientError:errorCode underlyingError:underlyingError formattedMessage:message];
 }
 
 - (instancetype)initWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
-  DWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
-  self = [self initWithStatusCode:errorCode underlyingError:underlyingError messageFormat:format arguments:arguments];
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
   va_end(arguments);
-  return self;
+  return [self initWithServerError:errorCode underlyingError:underlyingError formattedMessage:message];
 }
 
 @end
