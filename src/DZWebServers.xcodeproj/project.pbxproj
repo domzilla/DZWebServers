@@ -6,8 +6,23 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F2AFE6EB2F518FC500E0FBCA /* DZWebServers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F225D76F2F4CA3E800BA7968 /* DZWebServers.framework */; platformFilters = (ios, macos, ); };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F2AFE6EC2F518FC500E0FBCA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F29A00812B8204E300B18853 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F29A00892B8204E300B18853;
+			remoteInfo = DZWebServers;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		F225D76F2F4CA3E800BA7968 /* DZWebServers.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DZWebServers.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2AFE6E72F518FC500E0FBCA /* DZWebServersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DZWebServersTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -48,6 +63,11 @@
 			path = DZWebServers;
 			sourceTree = "<group>";
 		};
+		F2AFE6E82F518FC500E0FBCA /* DZWebServersTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = DZWebServersTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,12 +78,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F2AFE6E42F518FC500E0FBCA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2AFE6EB2F518FC500E0FBCA /* DZWebServers.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		F241387F2F4CB28700BE45E0 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				F2AFE6E72F518FC500E0FBCA /* DZWebServersTests.xctest */,
 				F225D76F2F4CA3E800BA7968 /* DZWebServers.framework */,
 			);
 			name = Products;
@@ -80,6 +109,7 @@
 			isa = PBXGroup;
 			children = (
 				F225D74B2F4CA38600BA7968 /* DZWebServers */,
+				F2AFE6E82F518FC500E0FBCA /* DZWebServersTests */,
 				F24138802F4CB29000BE45E0 /* Frameworks */,
 				F241387F2F4CB28700BE45E0 /* Products */,
 			);
@@ -119,6 +149,29 @@
 			productReference = F225D76F2F4CA3E800BA7968 /* DZWebServers.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		F2AFE6E62F518FC500E0FBCA /* DZWebServersTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F2AFE6F02F518FC500E0FBCA /* Build configuration list for PBXNativeTarget "DZWebServersTests" */;
+			buildPhases = (
+				F2AFE6E32F518FC500E0FBCA /* Sources */,
+				F2AFE6E42F518FC500E0FBCA /* Frameworks */,
+				F2AFE6E52F518FC500E0FBCA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F2AFE6ED2F518FC500E0FBCA /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F2AFE6E82F518FC500E0FBCA /* DZWebServersTests */,
+			);
+			name = DZWebServersTests;
+			packageProductDependencies = (
+			);
+			productName = DZDiffKitTests;
+			productReference = F2AFE6E72F518FC500E0FBCA /* DZWebServersTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -126,10 +179,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					F29A00892B8204E300B18853 = {
 						CreatedOnToolsVersion = 15.2;
+					};
+					F2AFE6E62F518FC500E0FBCA = {
+						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -147,12 +204,20 @@
 			projectRoot = "";
 			targets = (
 				F29A00892B8204E300B18853 /* DZWebServers */,
+				F2AFE6E62F518FC500E0FBCA /* DZWebServersTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		F29A00882B8204E300B18853 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F2AFE6E52F518FC500E0FBCA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -169,7 +234,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F2AFE6E32F518FC500E0FBCA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F2AFE6ED2F518FC500E0FBCA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilters = (
+				ios,
+				macos,
+			);
+			target = F29A00892B8204E300B18853 /* DZWebServers */;
+			targetProxy = F2AFE6EC2F518FC500E0FBCA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		F29A008F2B8204E300B18853 /* Debug */ = {
@@ -364,6 +448,59 @@
 			};
 			name = Release;
 		};
+		F2AFE6EE2F518FC500E0FBCA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 568T6RKXH7;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.domzilla.DZDiffKitTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		F2AFE6EF2F518FC500E0FBCA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 568T6RKXH7;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.domzilla.DZDiffKitTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -381,6 +518,15 @@
 			buildConfigurations = (
 				F29A00922B8204E300B18853 /* Debug */,
 				F29A00932B8204E300B18853 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F2AFE6F02F518FC500E0FBCA /* Build configuration list for PBXNativeTarget "DZWebServersTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F2AFE6EE2F518FC500E0FBCA /* Debug */,
+				F2AFE6EF2F518FC500E0FBCA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

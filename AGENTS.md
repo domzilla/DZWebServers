@@ -116,11 +116,24 @@ xcodebuild -project src/DZWebServers.xcodeproj -scheme DZWebServers \
 xcodebuild -project src/DZWebServers.xcodeproj -scheme DZWebServers clean
 ```
 
-No test targets exist in this project.
+## Testing (MANDATORY)
+This project uses **Swift Testing** (`@Test`, `@Suite`, `#expect`). Tests live in `src/DZWebServersTests/`.
+
+**Run tests after every code change:**
+```bash
+xcodebuild test -project src/DZWebServers.xcodeproj -scheme DZWebServersTests \
+  -destination 'platform=macOS' -configuration Debug
+```
+
+**Rules:**
+- Tests **must pass** before handoff for every supported platform — do not leave broken tests
+- When adding or changing public API, **add or update corresponding tests**
+- When removing public API, **remove the corresponding tests**
+- One test file per public class
 
 ---
 
 ## Notes
 - All public APIs must have documentation comments
 - Class prefix is `DZ`, internal macro prefix is `DWS`
-- The framework is pure Objective-C — no Swift files
+- The framework is pure Objective-C — no Swift source files in the framework (tests are Swift)

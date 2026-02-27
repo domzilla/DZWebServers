@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Comprehensive Swift Testing test suite: 766 tests in 165 suites covering all 16 public classes
+  - `DZWebServersTests` target using Swift Testing framework (`@Test`, `#expect`, `@Suite`)
+  - Integration tests against live `DZWebServer` instances on ephemeral ports
+  - Parameterized tests for MIME types, HTTP status codes, header parsing, byte ranges, and more
+  - Full coverage for DZWebServer, DZWebServerConnection, DZWebServerFunctions, DZWebServerHTTPStatusCodes, DZWebServerRequest, DZWebServerDataRequest, DZWebServerFileRequest, DZWebServerMultiPartFormRequest, DZWebServerURLEncodedFormRequest, DZWebServerResponse, DZWebServerDataResponse, DZWebServerFileResponse, DZWebServerStreamedResponse, DZWebServerErrorResponse, DZWebUploader, and DZWebDAVServer
 - Comprehensive HeaderDoc/Doxygen-style documentation for all public API declarations across all 17 public headers
   - Classes, protocols, categories, properties, methods, typedefs, block types, enums, and constants
   - Implementation-accurate details: default values, thread safety, edge cases, RFC references
