@@ -30,180 +30,342 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- *  The DZWebServerBodyReaderCompletionBlock is passed by DZWebServer to the
- *  DZWebServerBodyReader object when reading data from it asynchronously.
+ *  @brief Completion block used for asynchronous body data reads.
+ *
+ *  This block is passed by DZWebServerConnection to a DZWebServerBodyReader
+ *  when reading response body data asynchronously via
+ *  @c -asyncReadDataWithCompletion:.
+ *
+ *  @param data A non-empty @c NSData if body data is available, an empty
+ *              @c NSData (length 0) if the body has been fully read, or
+ *              @c nil if an error occurred.
+ *  @param error An @c NSError describing the failure when @c data is @c nil.
+ *               This parameter is @c nil on success.
  */
 typedef void (^DZWebServerBodyReaderCompletionBlock)(NSData* _Nullable data, NSError* _Nullable error);
 
 /**
- *  This protocol is used by the DZWebServerConnection to communicate with
- *  the DZWebServerResponse and read the HTTP body data to send.
+ *  @brief Protocol for reading HTTP response body data.
  *
- *  Note that multiple DZWebServerBodyReader objects can be chained together
- *  internally e.g. to automatically apply gzip encoding to the content before
- *  passing it on to the DZWebServerResponse.
+ *  DZWebServerConnection uses this protocol to communicate with
+ *  DZWebServerResponse and stream the HTTP body data to the client. The
+ *  lifecycle follows a strict open-read-close sequence:
  *
- *  @warning These methods can be called on any DZ thread.
+ *  1. @c -open: is called once before any data is read.
+ *  2. @c -readData: (or @c -asyncReadDataWithCompletion:) is called repeatedly
+ *     until an empty @c NSData is returned, signaling end-of-body.
+ *  3. @c -close is called once after all data has been sent.
+ *
+ *  Multiple DZWebServerBodyReader objects can be chained together internally
+ *  (e.g., to apply gzip encoding to the content before transmission).
+ *
+ *  @warning These methods can be called on any GCD thread.
  */
 @protocol DZWebServerBodyReader <NSObject>
 
 @required
 
 /**
- *  This method is called before any body data is sent.
+ *  @brief Opens the body reader in preparation for reading data.
  *
- *  It should return YES on success or NO on failure and set the "error" argument
- *  which is guaranteed to be non-NULL.
+ *  Called exactly once before any calls to @c -readData: or
+ *  @c -asyncReadDataWithCompletion:. Use this method to acquire resources
+ *  such as file handles or stream buffers needed for reading.
+ *
+ *  @param error On failure, set to an @c NSError describing what went wrong.
+ *               The pointer is guaranteed to be non-NULL.
+ *  @return @c YES on success, @c NO on failure (with @c error populated).
  */
 - (BOOL)open:(NSError**)error;
 
 /**
- *  This method is called whenever body data is sent.
+ *  @brief Synchronously reads the next chunk of body data.
  *
- *  It should return a non-empty NSData if there is body data available,
- *  or an empty NSData there is no more body data, or nil on error and set
- *  the "error" argument which is guaranteed to be non-NULL.
+ *  Called repeatedly after @c -open: succeeds until the body is fully consumed.
+ *
+ *  @param error On failure, set to an @c NSError describing what went wrong.
+ *               The pointer is guaranteed to be non-NULL.
+ *  @return A non-empty @c NSData if body data is available, an empty @c NSData
+ *          (length 0) if there is no more body data, or @c nil on error (with
+ *          @c error populated).
  */
 - (nullable NSData*)readData:(NSError**)error;
 
 /**
- *  This method is called after all body data has been sent.
+ *  @brief Closes the body reader and releases any resources.
+ *
+ *  Called exactly once after all body data has been sent (or when the
+ *  connection terminates). Use this method to release file handles, buffers,
+ *  or other resources acquired in @c -open:.
  */
 - (void)close;
 
 @optional
 
 /**
- *  If this method is implemented, it will be preferred over -readData:.
+ *  @brief Asynchronously reads the next chunk of body data.
  *
- *  It must call the passed block when data is available, passing a non-empty
- *  NSData if there is body data available, or an empty NSData there is no more
- *  body data, or nil on error and pass an NSError along.
+ *  When implemented, this method is preferred over the synchronous
+ *  @c -readData: method. The implementation must invoke @c block exactly once
+ *  when data becomes available.
+ *
+ *  @param block A completion block that must be called with the result.
+ *               Pass a non-empty @c NSData if body data is available, an empty
+ *               @c NSData (length 0) if there is no more body data, or @c nil
+ *               with an @c NSError on failure.
+ *
+ *  @note This method is optional. If not implemented, DZWebServerConnection
+ *        falls back to the synchronous @c -readData: method.
+ *
+ *  @see DZWebServerBodyReaderCompletionBlock
  */
 - (void)asyncReadDataWithCompletion:(DZWebServerBodyReaderCompletionBlock)block NS_SWIFT_DISABLE_ASYNC;
 
 @end
 
 /**
- *  The DZWebServerResponse class is used to wrap a single HTTP response.
- *  It is instantiated by the handler of the DZWebServer that handled the request.
- *  If a body is present, the methods from the DZWebServerBodyReader protocol
- *  will be called by the DZWebServerConnection to send it.
+ *  @brief Base class representing a single HTTP response.
  *
- *  The default implementation of the DZWebServerBodyReader protocol
- *  on the class simply returns an empty body.
+ *  DZWebServerResponse wraps the metadata and body of an HTTP response. It is
+ *  instantiated inside a DZWebServer request handler and returned to the
+ *  DZWebServerConnection, which sends the response headers and streams the body
+ *  using the DZWebServerBodyReader protocol.
  *
- *  @warning DZWebServerResponse instances can be created and used on any DZ thread.
+ *  @discussion The default DZWebServerBodyReader implementation on this class
+ *  returns an empty body (zero-length @c NSData from @c -readData:). Subclasses
+ *  such as @c DZWebServerDataResponse, @c DZWebServerFileResponse, and
+ *  @c DZWebServerStreamedResponse override the reader methods to supply actual
+ *  body content.
+ *
+ *  When @c gzipContentEncodingEnabled is set to @c YES, a gzip encoder is
+ *  automatically chained in front of the body reader. This removes the
+ *  @c Content-Length header and adds a @c Content-Encoding: gzip header.
+ *
+ *  @warning DZWebServerResponse instances can be created and used on any GCD
+ *           thread.
+ *
+ *  @see DZWebServerDataResponse
+ *  @see DZWebServerFileResponse
+ *  @see DZWebServerStreamedResponse
  */
 @interface DZWebServerResponse : NSObject <DZWebServerBodyReader>
 
 /**
- *  Sets the content type for the body of the response.
+ *  @brief The MIME content type of the response body.
  *
- *  The default value is nil i.e. the response has no body.
+ *  Sent as the @c Content-Type HTTP header. When @c nil, the response is
+ *  treated as having no body, and the DZWebServerBodyReader methods will not
+ *  be invoked.
  *
- *  @warning This property must be set if a body is present.
+ *  Defaults to @c nil (no body).
+ *
+ *  @warning This property must be set to a non-nil value when a response body
+ *           is present. The @c -hasBody method checks this property to determine
+ *           whether a body exists.
  */
 @property(nonatomic, copy, nullable) NSString* contentType;
 
 /**
- *  Sets the content length for the body of the response. If a body is present
- *  but this property is set to "NSUIntegerMax", this means the length of the body
- *  cannot be known ahead of time. Chunked transfer encoding will be
- *  automatically enabled by the DZWebServerConnection to comply with HTTP/1.1
+ *  @brief The byte length of the response body.
+ *
+ *  Sent as the @c Content-Length HTTP header. When set to a concrete value,
+ *  DZWebServerConnection uses a fixed-length transfer. When set to
+ *  @c NSUIntegerMax, the body length is considered unknown and chunked
+ *  transfer encoding is automatically enabled to comply with HTTP/1.1
  *  specifications.
  *
- *  The default value is "NSUIntegerMax" i.e. the response has no body or its length
- *  is undefined.
+ *  Defaults to @c NSUIntegerMax (unknown / no body).
+ *
+ *  @note Enabling @c gzipContentEncodingEnabled resets this property to
+ *        @c NSUIntegerMax because the compressed size is not known in advance.
+ *
+ *  @see gzipContentEncodingEnabled
  */
 @property(nonatomic) NSUInteger contentLength;
 
 /**
- *  Sets the HTTP status code for the response.
+ *  @brief The HTTP status code for the response.
  *
- *  The default value is 200 i.e. "OK".
+ *  Sent as the status code in the HTTP response status line. Use the
+ *  constants defined in @c DZWebServerHTTPStatusCodes.h (e.g.,
+ *  @c kDZWebServerHTTPStatusCode_OK, @c kDZWebServerHTTPStatusCode_NotFound).
+ *
+ *  Defaults to @c 200 (@c kDZWebServerHTTPStatusCode_OK).
+ *
+ *  @see DZWebServerHTTPStatusCodes.h
  */
 @property(nonatomic) NSInteger statusCode;
 
 /**
- *  Sets the caching hint for the response using the "Cache-Control" header.
- *  This value is expressed in seconds.
+ *  @brief The maximum age for client-side caching, in seconds.
  *
- *  The default value is 0 i.e. "no-cache".
+ *  Sets the @c Cache-Control HTTP header. A value of @c 0 produces
+ *  @c Cache-Control: no-cache, instructing clients and proxies not to cache
+ *  the response. Any positive value produces @c Cache-Control: max-age=N.
+ *
+ *  Defaults to @c 0 (no-cache).
  */
 @property(nonatomic) NSUInteger cacheControlMaxAge;
 
 /**
- *  Sets the last modified date for the response using the "Last-Modified" header.
+ *  @brief The last-modified date of the resource.
  *
- *  The default value is nil.
+ *  When non-nil, sent as the @c Last-Modified HTTP header. Clients may use
+ *  this value in subsequent conditional requests via the
+ *  @c If-Modified-Since header, enabling 304 Not Modified responses.
+ *
+ *  Defaults to @c nil (header not sent).
  */
 @property(nonatomic, nullable) NSDate* lastModifiedDate;
 
 /**
- *  Sets the ETag for the response using the "ETag" header.
+ *  @brief The entity tag (ETag) for the resource.
  *
- *  The default value is nil.
+ *  When non-nil, sent as the @c ETag HTTP header. Clients may use this value
+ *  in subsequent conditional requests via the @c If-None-Match header,
+ *  enabling 304 Not Modified responses.
+ *
+ *  Defaults to @c nil (header not sent).
  */
 @property(nonatomic, copy, nullable) NSString* eTag;
 
 /**
- *  Enables gzip encoding for the response body.
+ *  @brief Whether the response body is compressed with gzip encoding.
  *
- *  The default value is NO.
+ *  When set to @c YES, a gzip encoder is inserted into the body reader chain
+ *  during response preparation. The encoder adds a
+ *  @c Content-Encoding: gzip header and resets @c contentLength to
+ *  @c NSUIntegerMax (since the compressed size is unknown ahead of time),
+ *  which forces chunked transfer encoding.
  *
- *  @warning Enabling gzip encoding will remove any "Content-Length" header
- *  since the length of the body is not known anymore. The client will still
- *  be able to determine the body length when connection is closed per
- *  HTTP/1.1 specifications.
+ *  Defaults to @c NO.
+ *
+ *  @warning Enabling gzip encoding removes any previously set
+ *           @c Content-Length header. The client determines the body length
+ *           by reading until the connection closes, per HTTP/1.1 specification.
+ *
+ *  @see contentLength
  */
 @property(nonatomic, getter=isGZipContentEncodingEnabled) BOOL gzipContentEncodingEnabled;
 
 /**
- *  Creates an empty response.
+ *  @brief Creates an empty response with no body.
+ *
+ *  Convenience factory method that allocates and initializes a new response
+ *  with default values: status code 200, no content type, and no body.
+ *
+ *  @return A new autoreleased response instance.
  */
 + (instancetype)response;
 
 /**
- *  This method is the designated initializer for the class.
+ *  @brief Initializes an empty response with default values.
+ *
+ *  This is the designated initializer. After initialization, the response has:
+ *  - @c contentType = @c nil (no body)
+ *  - @c contentLength = @c NSUIntegerMax (unknown)
+ *  - @c statusCode = @c 200 (OK)
+ *  - @c cacheControlMaxAge = @c 0 (no-cache)
+ *  - @c lastModifiedDate = @c nil
+ *  - @c eTag = @c nil
+ *  - @c gzipContentEncodingEnabled = @c NO
+ *
+ *  @return A newly initialized response instance.
  */
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 
 /**
- *  Sets an additional HTTP header on the response.
- *  Pass a nil value to remove an additional header.
+ *  @brief Sets or removes a custom HTTP header on the response.
  *
- *  @warning Do not attempt to override the primary headers used
- *  by DZWebServerResponse like "Content-Type", "ETag", etc...
+ *  Use this method to attach additional headers beyond those managed
+ *  automatically by DZWebServerResponse (e.g., @c Content-Type,
+ *  @c Content-Length, @c Cache-Control, @c Last-Modified, @c ETag,
+ *  @c Content-Encoding).
+ *
+ *  @param value The header value to set, or @c nil to remove an existing header.
+ *  @param header The HTTP header field name (e.g., @c @"X-Custom-Header").
+ *
+ *  @warning Do not attempt to override the primary headers managed by
+ *           DZWebServerResponse and DZWebServerConnection (such as
+ *           @c Content-Type, @c Content-Length, @c ETag, @c Last-Modified,
+ *           @c Cache-Control, or @c Content-Encoding). Doing so may produce
+ *           malformed HTTP responses.
  */
 - (void)setValue:(nullable NSString*)value forAdditionalHeader:(NSString*)header;
 
 /**
- *  Convenience method that checks if the contentType property is defined.
+ *  @brief Returns whether this response has a body.
+ *
+ *  This is a convenience method that checks whether @c contentType is non-nil.
+ *  A response is considered to have a body if and only if a content type has
+ *  been set.
+ *
+ *  @return @c YES if @c contentType is non-nil, @c NO otherwise.
  */
 - (BOOL)hasBody;
 
 @end
 
+/**
+ *  @brief Convenience initializers for common response patterns.
+ *
+ *  This category provides factory methods and initializers for creating
+ *  responses with custom HTTP status codes and HTTP redirects.
+ */
 @interface DZWebServerResponse (Extensions)
 
 /**
- *  Creates a empty response with a specific HTTP status code.
+ *  @brief Creates an empty response with the specified HTTP status code.
+ *
+ *  The returned response has no body (@c contentType is @c nil).
+ *
+ *  @param statusCode The HTTP status code for the response. Use constants from
+ *                    @c DZWebServerHTTPStatusCodes.h.
+ *  @return A new autoreleased response instance with the given status code.
+ *
+ *  @see DZWebServerHTTPStatusCodes.h
  */
 + (instancetype)responseWithStatusCode:(NSInteger)statusCode;
 
 /**
- *  Creates an HTTP redirect response to a new URL.
+ *  @brief Creates an HTTP redirect response to the specified URL.
+ *
+ *  Sets the @c Location header to the absolute string of @c location and
+ *  configures the status code based on the @c permanent flag.
+ *
+ *  @param location  The target URL for the redirect. Its absolute string
+ *                   representation is used as the @c Location header value.
+ *  @param permanent If @c YES, uses status code 301 (Moved Permanently).
+ *                   If @c NO, uses status code 307 (Temporary Redirect).
+ *  @return A new autoreleased redirect response instance.
  */
 + (instancetype)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
 
 /**
- *  Initializes an empty response with a specific HTTP status code.
+ *  @brief Initializes an empty response with the specified HTTP status code.
+ *
+ *  The response has no body (@c contentType is @c nil). All other properties
+ *  retain their default values from the designated initializer.
+ *
+ *  @param statusCode The HTTP status code for the response. Use constants from
+ *                    @c DZWebServerHTTPStatusCodes.h.
+ *  @return A newly initialized response instance with the given status code.
+ *
+ *  @see DZWebServerHTTPStatusCodes.h
  */
 - (instancetype)initWithStatusCode:(NSInteger)statusCode;
 
 /**
- *  Initializes an HTTP redirect response to a new URL.
+ *  @brief Initializes an HTTP redirect response to the specified URL.
+ *
+ *  Sets the @c Location header to the absolute string of @c location and
+ *  configures the status code based on the @c permanent flag.
+ *
+ *  @param location  The target URL for the redirect. Its absolute string
+ *                   representation is used as the @c Location header value.
+ *  @param permanent If @c YES, uses status code 301 (Moved Permanently).
+ *                   If @c NO, uses status code 307 (Temporary Redirect).
+ *  @return A newly initialized redirect response instance.
  */
 - (instancetype)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
 

@@ -30,32 +30,87 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- *  The DZWebServerDataRequest subclass of DZWebServerRequest stores the body
- *  of the HTTP request in memory.
+ *  @brief A request subclass that stores the entire HTTP body in memory.
+ *
+ *  @discussion DZWebServerDataRequest accumulates all received body data into an
+ *  in-memory @c NSData buffer. When the @c Content-Length header is present, the
+ *  internal buffer is pre-allocated with that capacity for efficiency. When
+ *  @c Content-Length is absent (e.g. chunked transfer encoding), the buffer grows
+ *  dynamically as data arrives.
+ *
+ *  Use this class for requests with reasonably sized bodies. For large uploads
+ *  where memory pressure is a concern, consider using @c DZWebServerFileRequest
+ *  instead, which streams the body to a temporary file on disk.
+ *
+ *  The @c Extensions category provides convenience accessors for interpreting
+ *  the raw body data as text or JSON.
+ *
+ *  @see DZWebServerRequest
+ *  @see DZWebServerFileRequest
  */
 @interface DZWebServerDataRequest : DZWebServerRequest
 
 /**
- *  Returns the data for the request body.
+ *  @brief The raw body data of the HTTP request.
+ *
+ *  @discussion Returns the complete body payload as an @c NSData object. The data
+ *  is available after the connection has finished receiving the request body
+ *  (i.e. after the @c DZWebServerBodyWriter protocol methods have completed).
+ *
+ *  If the request has no body, this returns an empty @c NSData instance.
  */
 @property(nonatomic, copy, readonly) NSData* data;
 
 @end
 
+/**
+ *  @brief Convenience accessors for interpreting the body data of a
+ *  @c DZWebServerDataRequest as text or JSON.
+ *
+ *  @discussion These properties lazily decode the raw body data on first access
+ *  and cache the result for subsequent reads. Each property validates the
+ *  request's @c Content-Type before attempting decoding and returns @c nil if
+ *  the content type does not match or if a decoding error occurs.
+ */
 @interface DZWebServerDataRequest (Extensions)
 
 /**
- *  Returns the data for the request body interpreted as text. If the content
- *  type of the body is not a text one, or if an error occurs, nil is returned.
+ *  @brief The body data interpreted as a text string, or @c nil if unavailable.
  *
- *  The text encoding used to interpret the data is extracted from the
- *  "Content-Type" header or defaults to UTF-8.
+ *  @discussion Decodes the raw body data into an @c NSString using the character
+ *  encoding specified in the @c charset parameter of the @c Content-Type header.
+ *  If no charset is specified, UTF-8 is assumed.
+ *
+ *  This property requires the @c Content-Type to have a @c text/ prefix
+ *  (e.g. @c text/plain, @c text/html). If the content type is not a text type,
+ *  or if the data cannot be decoded with the determined encoding, @c nil is
+ *  returned.
+ *
+ *  The result is lazily computed on first access and cached for subsequent reads.
+ *
+ *  @note The encoding is extracted from the @c Content-Type header's @c charset
+ *  parameter (e.g. @c "text/plain; charset=iso-8859-1").
  */
 @property(nonatomic, copy, readonly, nullable) NSString* text;
 
 /**
- *  Returns the data for the request body interpreted as a JSON object. If the
- *  content type of the body is not JSON, or if an error occurs, nil is returned.
+ *  @brief The body data parsed as a JSON object, or @c nil if unavailable.
+ *
+ *  @discussion Deserializes the raw body data into a Foundation object
+ *  (typically an @c NSDictionary or @c NSArray) using @c NSJSONSerialization.
+ *
+ *  This property requires the @c Content-Type to be one of the following MIME types:
+ *  - @c application/json
+ *  - @c text/json
+ *  - @c text/javascript
+ *
+ *  If the content type does not match any of the above, or if the data is not
+ *  valid JSON, @c nil is returned.
+ *
+ *  The result is lazily computed on first access and cached for subsequent reads.
+ *
+ *  @return An @c NSDictionary, @c NSArray, or other JSON-compatible Foundation
+ *  object, or @c nil on failure.
  */
 @property(nonatomic, readonly, nullable) id jsonObject;
 

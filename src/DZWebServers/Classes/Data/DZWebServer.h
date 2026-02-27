@@ -33,430 +33,759 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- *  The DZWebServerMatchBlock is called for every handler added to the
- *  DZWebServer whenever a new HTTP request has started (i.e. HTTP headers have
- *  been received). The block is passed the basic info for the request (HTTP method,
- *  URL, headers...) and must decide if it wants to handle it or not.
+ *  @brief Block used to determine whether a handler can handle an incoming HTTP request.
  *
- *  If the handler can handle the request, the block must return a new
- *  DZWebServerRequest instance created with the same basic info.
- *  Otherwise, it simply returns nil.
+ *  Called for every registered handler whenever a new HTTP request has started
+ *  (i.e. HTTP headers have been received). The block receives the basic request
+ *  metadata and must decide whether it wants to handle the request.
+ *
+ *  Handlers are evaluated in LIFO order (most recently added first). The first
+ *  handler whose match block returns a non-nil request object wins.
+ *
+ *  @param requestMethod The HTTP method of the request (e.g. @c "GET", @c "POST").
+ *  @param requestURL    The full URL of the request.
+ *  @param requestHeaders A dictionary of HTTP header name/value pairs.
+ *  @param urlPath       The percent-decoded path component of the URL.
+ *  @param urlQuery      A dictionary of parsed query string key/value pairs.
+ *
+ *  @return A new @c DZWebServerRequest instance (or subclass) initialized with the
+ *          provided request info if this handler can handle the request, or @c nil
+ *          to pass the request to the next handler.
  */
 typedef DZWebServerRequest* _Nullable (^DZWebServerMatchBlock)(NSString* requestMethod, NSURL* requestURL, NSDictionary<NSString*, NSString*>* requestHeaders, NSString* urlPath, NSDictionary<NSString*, NSString*>* urlQuery);
 
 /**
- *  The DZWebServerProcessBlock is called after the HTTP request has been fully
- *  received (i.e. the entire HTTP body has been read). The block is passed the
- *  DZWebServerRequest created at the previous step by the DZWebServerMatchBlock.
+ *  @brief Block used to synchronously generate an HTTP response for a fully received request.
  *
- *  The block must return a DZWebServerResponse or nil on error, which will
- *  result in a 500 HTTP status code returned to the client. It's however
- *  recommended to return a DZWebServerErrorResponse on error so more useful
- *  information can be returned to the client.
+ *  Called after the entire HTTP body has been read. The block receives the
+ *  @c DZWebServerRequest instance that was created by the corresponding
+ *  @c DZWebServerMatchBlock during the matching phase.
+ *
+ *  @param request The fully received request object (including body data).
+ *
+ *  @return A @c DZWebServerResponse to send back to the client, or @c nil to
+ *          return a 500 Internal Server Error. Prefer returning a
+ *          @c DZWebServerErrorResponse on error for more descriptive error information.
+ *
+ *  @see DZWebServerAsyncProcessBlock
  */
 typedef DZWebServerResponse* _Nullable (^DZWebServerProcessBlock)(__kindof DZWebServerRequest* request);
 
 /**
- *  The DZWebServerAsynchronousProcessBlock works like the DZWebServerProcessBlock
- *  except the DZWebServerResponse can be returned to the server at a later time
- *  allowing for asynchronous generation of the response.
+ *  @brief Completion block used to deliver an asynchronously generated HTTP response.
  *
- *  The block must eventually call "completionBlock" passing a DZWebServerResponse
- *  or nil on error, which will result in a 500 HTTP status code returned to the client.
- *  It's however recommended to return a DZWebServerErrorResponse on error so more
- *  useful information can be returned to the client.
+ *  @param response The @c DZWebServerResponse to send back to the client, or @c nil
+ *                  to return a 500 Internal Server Error.
+ *
+ *  @see DZWebServerAsyncProcessBlock
  */
 typedef void (^DZWebServerCompletionBlock)(DZWebServerResponse* _Nullable response);
+
+/**
+ *  @brief Block used to asynchronously generate an HTTP response for a fully received request.
+ *
+ *  Works like @c DZWebServerProcessBlock except the response can be delivered at
+ *  a later time via the provided completion block, allowing for asynchronous
+ *  operations (e.g. database queries, network requests) before responding.
+ *
+ *  @param request         The fully received request object (including body data).
+ *  @param completionBlock A block that must eventually be called exactly once with a
+ *                         @c DZWebServerResponse or @c nil. Passing @c nil results in
+ *                         a 500 Internal Server Error. Prefer passing a
+ *                         @c DZWebServerErrorResponse for more descriptive error information.
+ *
+ *  @warning The @p completionBlock must be called exactly once. Failing to call it
+ *           will leave the connection open indefinitely.
+ *
+ *  @see DZWebServerProcessBlock
+ */
 typedef void (^DZWebServerAsyncProcessBlock)(__kindof DZWebServerRequest* request, DZWebServerCompletionBlock completionBlock);
 
 /**
- *  The DZWebServerBuiltInLoggerBlock is used to override the built-in logger at runtime.
- *  The block will be passed the log level and the log message, see setLogLevel for
- *  documentation of the log levels for the built-in logger.
+ *  @brief Block used to override the built-in logger at runtime.
+ *
+ *  When set via @c +setBuiltInLogger:, this block receives all log messages
+ *  instead of the default stderr output.
+ *
+ *  @param level   The log level of the message. When using the built-in logging
+ *                 facility: 0 = DEBUG, 1 = VERBOSE, 2 = INFO, 3 = WARNING, 4 = ERROR.
+ *  @param message The pre-formatted log message string.
+ *
+ *  @note This block is only effective when the built-in logging facility is active.
+ *        It has no effect if a custom logging header is specified via the
+ *        @c __DZWEBSERVER_LOGGING_HEADER__ preprocessor constant.
+ *
+ *  @see +[DZWebServer setBuiltInLogger:]
+ *  @see +[DZWebServer setLogLevel:]
  */
 typedef void (^DZWebServerBuiltInLoggerBlock)(int level, NSString* message);
 
 /**
- *  The port used by the DZWebServer (NSNumber / NSUInteger).
+ *  @brief Option key specifying the TCP port for the server (@c NSNumber / @c NSUInteger).
  *
- *  The default value is 0 i.e. let the OS pick a random port.
+ *  When set to 0, the operating system selects an available port automatically.
+ *  The actual port can be retrieved from the @c port property after the server starts.
+ *
+ *  The default value is @c 0.
+ *
+ *  @see DZWebServer.port
  */
 extern NSString* const DZWebServerOption_Port;
 
 /**
- *  The Bonjour name used by the DZWebServer (NSString). If set to an empty string,
- *  the name will automatically take the value of the DZWebServerOption_ServerName
- *  option. If this option is set to nil, Bonjour will be disabled.
+ *  @brief Option key specifying the Bonjour name for service registration (@c NSString).
  *
- *  The default value is nil.
+ *  - If set to a non-empty string, that string is used as the Bonjour service name.
+ *  - If set to an empty string (@c @@""), the value of
+ *    @c DZWebServerOption_ServerName is used instead.
+ *  - If set to @c nil (or omitted), Bonjour registration is disabled entirely.
+ *
+ *  The default value is @c nil (Bonjour disabled).
+ *
+ *  @see DZWebServerOption_ServerName
+ *  @see DZWebServerOption_BonjourType
+ *  @see DZWebServer.bonjourName
  */
 extern NSString* const DZWebServerOption_BonjourName;
 
 /**
-*  The Bonjour TXT Data used by the DZWebServer (NSDictionary<NSString, NSString>).
-*
-*  The default value is nil.
-*/
+ *  @brief Option key specifying Bonjour TXT record data (@c NSDictionary<NSString *, NSString *>).
+ *
+ *  A dictionary of key/value pairs to publish as TXT record data alongside
+ *  the Bonjour service registration. TXT records allow advertising additional
+ *  metadata about the service to clients on the local network.
+ *
+ *  The default value is @c nil (no TXT record data).
+ *
+ *  @note This option has no effect if Bonjour is disabled
+ *        (i.e. @c DZWebServerOption_BonjourName is @c nil).
+ *
+ *  @see DZWebServerOption_BonjourName
+ */
 extern NSString* const DZWebServerOption_BonjourTXTData;
 
 /**
- *  The Bonjour service type used by the DZWebServer (NSString).
+ *  @brief Option key specifying the Bonjour service type (@c NSString).
  *
- *  The default value is "_http._tcp", the service type for HTTP web servers.
+ *  The default value is @c @@"_http._tcp", the standard service type for HTTP
+ *  web servers.
+ *
+ *  @note This option has no effect if Bonjour is disabled
+ *        (i.e. @c DZWebServerOption_BonjourName is @c nil).
+ *
+ *  @see DZWebServerOption_BonjourName
  */
 extern NSString* const DZWebServerOption_BonjourType;
 
 /**
- *  Request a port mapping in the NAT gateway (NSNumber / BOOL).
+ *  @brief Option key to request a NAT port mapping via the gateway (@c NSNumber / @c BOOL).
  *
- *  This uses the DNSService API under the hood which supports IPv4 mappings only.
+ *  When enabled, the server uses the @c DNSService API to request a port mapping
+ *  in the NAT gateway, making the server reachable from outside the local network.
+ *  Only IPv4 mappings are supported.
  *
- *  The default value is NO.
+ *  Use the @c publicServerURL property to retrieve the externally reachable address
+ *  after the mapping is established.
  *
- *  @warning The external port set up by the NAT gateway may be different than
- *  the one used by the DZWebServer.
+ *  The default value is @c NO.
+ *
+ *  @warning The external port set up by the NAT gateway may differ from the
+ *           server's local listening port.
+ *
+ *  @see DZWebServer.publicServerURL
  */
 extern NSString* const DZWebServerOption_RequestNATPortMapping;
 
 /**
- *  Only accept HTTP requests coming from localhost i.e. not from the outside
- *  network (NSNumber / BOOL).
+ *  @brief Option key to restrict the server to localhost connections only (@c NSNumber / @c BOOL).
  *
- *  The default value is NO.
+ *  When enabled, the server binds to the loopback interface (@c INADDR_LOOPBACK /
+ *  @c in6addr_loopback) on both IPv4 and IPv6, rejecting connections from the
+ *  outside network.
  *
- *  @warning Bonjour and NAT port mapping should be disabled if using this option
- *  since the server will not be reachable from the outside network anyway.
+ *  The default value is @c NO.
+ *
+ *  @warning Bonjour and NAT port mapping should be disabled when using this option,
+ *           since the server will not be reachable from the outside network anyway.
+ *
+ *  @see DZWebServerOption_BonjourName
+ *  @see DZWebServerOption_RequestNATPortMapping
  */
 extern NSString* const DZWebServerOption_BindToLocalhost;
 
 /**
- *  The maximum number of incoming HTTP requests that can be queued waiting to
- *  be handled before new ones are dropped (NSNumber / NSUInteger).
+ *  @brief Option key specifying the maximum pending connection backlog (@c NSNumber / @c NSUInteger).
  *
- *  The default value is 16.
+ *  Controls the @c listen() backlog parameter for both the IPv4 and IPv6
+ *  listening sockets. Incoming connections exceeding this limit are dropped
+ *  by the operating system.
+ *
+ *  The default value is @c 16.
  */
 extern NSString* const DZWebServerOption_MaxPendingConnections;
 
 /**
- *  The value for "Server" HTTP header used by the DZWebServer (NSString).
+ *  @brief Option key specifying the value for the @c "Server" HTTP response header (@c NSString).
  *
- *  The default value is the DZWebServer class name.
+ *  Also used as the Bonjour service name when @c DZWebServerOption_BonjourName
+ *  is set to an empty string, and as the default authentication realm.
+ *
+ *  The default value is the class name of the server instance
+ *  (e.g. @c @@"DZWebServer" or the subclass name).
+ *
+ *  @see DZWebServerOption_BonjourName
+ *  @see DZWebServerOption_AuthenticationRealm
  */
 extern NSString* const DZWebServerOption_ServerName;
 
 /**
- *  The authentication method used by the DZWebServer
- *  (one of "DZWebServerAuthenticationMethod_...").
+ *  @brief Option key specifying the HTTP authentication method (@c NSString).
  *
- *  The default value is nil i.e. authentication is disabled.
+ *  Must be one of the @c DZWebServerAuthenticationMethod_* constants, or @c nil
+ *  to disable authentication entirely.
+ *
+ *  The default value is @c nil (authentication disabled).
+ *
+ *  @see DZWebServerAuthenticationMethod_Basic
+ *  @see DZWebServerAuthenticationMethod_DigestAccess
+ *  @see DZWebServerOption_AuthenticationAccounts
+ *  @see DZWebServerOption_AuthenticationRealm
  */
 extern NSString* const DZWebServerOption_AuthenticationMethod;
 
 /**
- *  The authentication realm used by the DZWebServer (NSString).
+ *  @brief Option key specifying the HTTP authentication realm (@c NSString).
  *
- *  The default value is the same as the DZWebServerOption_ServerName option.
+ *  The realm string is sent to the client in the @c WWW-Authenticate header and
+ *  is typically displayed in the browser's authentication dialog.
+ *
+ *  The default value is the value of @c DZWebServerOption_ServerName.
+ *
+ *  @note This option has no effect if @c DZWebServerOption_AuthenticationMethod
+ *        is @c nil.
+ *
+ *  @see DZWebServerOption_AuthenticationMethod
+ *  @see DZWebServerOption_ServerName
  */
 extern NSString* const DZWebServerOption_AuthenticationRealm;
 
 /**
- *  The authentication accounts used by the DZWebServer
- *  (NSDictionary of username / password pairs).
+ *  @brief Option key specifying the authentication credentials
+ *         (@c NSDictionary<NSString *, NSString *>).
  *
- *  The default value is nil i.e. no accounts.
+ *  A dictionary mapping usernames to plaintext passwords. For Basic
+ *  authentication, credentials are stored as Base64-encoded strings internally.
+ *  For Digest Access authentication, they are stored as MD5 hashes.
+ *
+ *  The default value is @c nil (no accounts).
+ *
+ *  @note This option has no effect if @c DZWebServerOption_AuthenticationMethod
+ *        is @c nil.
+ *
+ *  @see DZWebServerOption_AuthenticationMethod
  */
 extern NSString* const DZWebServerOption_AuthenticationAccounts;
 
 /**
- *  The class used by the DZWebServer when instantiating DZWebServerConnection
- *  (subclass of DZWebServerConnection).
+ *  @brief Option key specifying the connection class to instantiate (@c Class).
  *
- *  The default value is the DZWebServerConnection class.
+ *  Must be @c DZWebServerConnection or a subclass thereof. Allows customizing
+ *  connection-level behavior (e.g. custom request parsing or response handling).
+ *
+ *  The default value is @c [DZWebServerConnection class].
+ *
+ *  @see DZWebServerConnection
  */
 extern NSString* const DZWebServerOption_ConnectionClass;
 
 /**
- *  Allow the DZWebServer to pretend "HEAD" requests are actually "GET" ones
- *  and automatically discard the HTTP body of the response (NSNumber / BOOL).
+ *  @brief Option key to automatically handle HEAD requests as GET requests
+ *         (@c NSNumber / @c BOOL).
  *
- *  The default value is YES.
+ *  When enabled, incoming @c HEAD requests are treated as @c GET requests
+ *  internally, and the HTTP response body is automatically discarded before
+ *  sending. This allows handlers to only implement @c GET and still correctly
+ *  respond to @c HEAD requests per the HTTP specification.
+ *
+ *  The default value is @c YES.
  */
 extern NSString* const DZWebServerOption_AutomaticallyMapHEADToGET;
 
 /**
- *  The interval expressed in seconds used by the DZWebServer to decide how to
- *  coalesce calls to -webServerDidConnect: and -webServerDidDisconnect:
- *  (NSNumber / double). Coalescing will be disabled if the interval is <= 0.0.
+ *  @brief Option key specifying the connected-state coalescing interval in seconds
+ *         (@c NSNumber / @c double).
  *
- *  The default value is 1.0 second.
+ *  After the last active connection closes, the server waits this many seconds
+ *  before calling @c -webServerDidDisconnect: on the delegate. If a new connection
+ *  opens within that interval, the disconnect callback is suppressed, effectively
+ *  coalescing rapid connect/disconnect cycles into a single session.
+ *
+ *  Set to @c 0.0 or a negative value to disable coalescing (disconnect is
+ *  reported immediately).
+ *
+ *  The default value is @c 1.0 second.
+ *
+ *  @see DZWebServerDelegate
  */
 extern NSString* const DZWebServerOption_ConnectedStateCoalescingInterval;
 
 /**
- *  Set the dispatch queue priority on which server connection will be 
- *  run (NSNumber / long).
+ *  @brief Option key specifying the GCD global queue priority for handling connections
+ *         (@c NSNumber / @c long).
  *
+ *  Determines the priority of the global dispatch queue on which incoming
+ *  connections are accepted and processed. Must be one of the
+ *  @c DISPATCH_QUEUE_PRIORITY_* constants.
  *
- *  The default value is DISPATCH_QUEUE_PRIORITY_DEFAULT.
+ *  The default value is @c DISPATCH_QUEUE_PRIORITY_DEFAULT.
  */
 extern NSString* const DZWebServerOption_DispatchQueuePriority;
 
 #if TARGET_OS_IPHONE
 
 /**
- *  Enables the DZWebServer to automatically suspend itself (as if -stop was
- *  called) when the iOS app goes into the background and the last
- *  DZWebServerConnection is closed, then resume itself (as if -start was called)
- *  when the iOS app comes back to the foreground (NSNumber / BOOL).
+ *  @brief Option key to automatically suspend the server when the app backgrounds
+ *         (@c NSNumber / @c BOOL). iOS only.
  *
- *  See the README.md file for more information about this option.
+ *  When enabled, the server automatically stops its listening sockets when the
+ *  iOS app enters the background and the last active connection completes. It
+ *  resumes listening when the app returns to the foreground. A background task
+ *  is used to keep the server alive while connections are still being served.
  *
- *  The default value is YES.
+ *  The default value is @c YES.
  *
- *  @warning The running property will be NO while the DZWebServer is suspended.
+ *  @warning While suspended, the @c running property remains @c YES but the
+ *           server is not accepting new connections. The listening sockets are
+ *           only re-created when the app re-enters the foreground.
  */
 extern NSString* const DZWebServerOption_AutomaticallySuspendInBackground;
 
 #endif
 
 /**
- *  HTTP Basic Authentication scheme (see https://tools.ietf.org/html/rfc2617).
+ *  @brief Authentication method constant for HTTP Basic Authentication (RFC 2617).
  *
- *  @warning Use of this authentication scheme is not recommended as the
- *  passwords are sent in clear.
+ *  Pass this value for the @c DZWebServerOption_AuthenticationMethod option key
+ *  to enable Basic authentication.
+ *
+ *  @warning Credentials are transmitted as Base64-encoded plaintext. Do not use
+ *           this scheme over unencrypted HTTP in production environments.
+ *
+ *  @see DZWebServerOption_AuthenticationMethod
+ *  @see DZWebServerAuthenticationMethod_DigestAccess
  */
 extern NSString* const DZWebServerAuthenticationMethod_Basic;
 
 /**
- *  HTTP Digest Access Authentication scheme (see https://tools.ietf.org/html/rfc2617).
+ *  @brief Authentication method constant for HTTP Digest Access Authentication (RFC 2617).
+ *
+ *  Pass this value for the @c DZWebServerOption_AuthenticationMethod option key
+ *  to enable Digest Access authentication. Credentials are verified using an
+ *  MD5-based challenge-response mechanism, avoiding plaintext password transmission.
+ *
+ *  @see DZWebServerOption_AuthenticationMethod
+ *  @see DZWebServerAuthenticationMethod_Basic
  */
 extern NSString* const DZWebServerAuthenticationMethod_DigestAccess;
 
 @class DZWebServer;
 
 /**
- *  Delegate methods for DZWebServer.
+ *  @brief Delegate protocol for receiving lifecycle and connectivity events from a DZWebServer.
  *
- *  @warning These methods are always called on the main thread in a serialized way.
+ *  All methods are optional and are always called on the main thread in a
+ *  serialized manner.
+ *
+ *  @warning These methods are dispatched asynchronously to the main queue. They
+ *           may fire shortly after the actual event occurs.
  */
 @protocol DZWebServerDelegate <NSObject>
 @optional
 
 /**
- *  This method is called after the server has successfully started.
+ *  @brief Called after the server has successfully started listening for connections.
+ *
+ *  At this point, the @c port, @c serverURL, and @c running properties are valid.
+ *
+ *  @param server The server instance that started.
  */
 - (void)webServerDidStart:(DZWebServer*)server;
 
 /**
- *  This method is called after the Bonjour registration for the server has
- *  successfully completed.
+ *  @brief Called after Bonjour registration and resolution have successfully completed.
  *
- *  Use the "bonjourServerURL" property to retrieve the Bonjour address of the
- *  server.
+ *  Use the @c bonjourServerURL property to retrieve the Bonjour address of the server.
+ *  This may take up to a few seconds after the server starts.
+ *
+ *  @param server The server instance that completed Bonjour registration.
+ *
+ *  @see DZWebServer.bonjourServerURL
  */
 - (void)webServerDidCompleteBonjourRegistration:(DZWebServer*)server;
 
 /**
- *  This method is called after the NAT port mapping for the server has been
- *  updated.
+ *  @brief Called when the NAT port mapping has been created or updated.
  *
- *  Use the "publicServerURL" property to retrieve the public address of the
- *  server.
+ *  Use the @c publicServerURL property to retrieve the externally reachable
+ *  address of the server. This method is also called if the mapping fails,
+ *  in which case @c publicServerURL returns @c nil.
+ *
+ *  @param server The server instance whose NAT mapping was updated.
+ *
+ *  @see DZWebServer.publicServerURL
  */
 - (void)webServerDidUpdateNATPortMapping:(DZWebServer*)server;
 
 /**
- *  This method is called when the first DZWebServerConnection is opened by the
- *  server to serve a series of HTTP requests.
+ *  @brief Called when the first connection opens, beginning a series of HTTP requests.
  *
- *  A series of HTTP requests is considered ongoing as long as new HTTP requests
- *  keep coming (and new DZWebServerConnection instances keep being opened),
- *  until before the last HTTP request has been responded to (and the
- *  corresponding last DZWebServerConnection closed).
+ *  A "connected" session is considered ongoing as long as new connections keep
+ *  opening. The session ends when the last connection closes (subject to the
+ *  coalescing interval).
+ *
+ *  On iOS, a background task is automatically started when this is called from
+ *  the foreground, ensuring in-flight requests complete when the app backgrounds.
+ *
+ *  @param server The server instance that received a connection.
+ *
+ *  @see DZWebServerOption_ConnectedStateCoalescingInterval
  */
 - (void)webServerDidConnect:(DZWebServer*)server;
 
 /**
- *  This method is called when the last DZWebServerConnection is closed after
- *  the server has served a series of HTTP requests.
+ *  @brief Called when the last connection closes, ending a series of HTTP requests.
  *
- *  The DZWebServerOption_ConnectedStateCoalescingInterval option can be used
- *  to have the server wait some extra delay before considering that the series
- *  of HTTP requests has ended (in case there some latency between consecutive
- *  requests). This effectively coalesces the calls to -webServerDidConnect:
- *  and -webServerDidDisconnect:.
+ *  If @c DZWebServerOption_ConnectedStateCoalescingInterval is greater than 0,
+ *  the server waits that many seconds after the last connection closes before
+ *  calling this method. If a new connection opens during that interval, this
+ *  callback is suppressed.
+ *
+ *  On iOS, the background task (if any) is ended after this callback.
+ *
+ *  @param server The server instance that disconnected.
+ *
+ *  @see DZWebServerOption_ConnectedStateCoalescingInterval
  */
 - (void)webServerDidDisconnect:(DZWebServer*)server;
 
 /**
- *  This method is called after the server has stopped.
+ *  @brief Called after the server has fully stopped.
+ *
+ *  At this point, the listening sockets are closed and the @c running property
+ *  returns @c NO.
+ *
+ *  @param server The server instance that stopped.
  */
 - (void)webServerDidStop:(DZWebServer*)server;
 
 @end
 
 /**
- *  The DZWebServer class listens for incoming HTTP requests on a given port,
- *  then passes each one to a "handler" capable of generating an HTTP response
- *  for it, which is then sent back to the client.
+ *  @brief A lightweight, GCD-based HTTP 1.1 server for embedding in iOS and macOS apps.
  *
- *  DZWebServer instances can be created and used from any thread but it's
- *  recommended to have the main thread's runloop be running so internal callbacks
- *  can be handled e.g. for Bonjour registration.
+ *  @c DZWebServer listens for incoming HTTP requests on a given port using both
+ *  IPv4 and IPv6 sockets, then dispatches each request to a matching "handler"
+ *  that generates an HTTP response. Handlers are evaluated in LIFO order
+ *  (most recently added first).
  *
- *  See the README.md file for more information about the architecture of DZWebServer.
+ *  The server supports:
+ *  - Synchronous and asynchronous response generation
+ *  - HTTP Basic and Digest Access authentication
+ *  - Bonjour service registration and NAT port mapping
+ *  - Automatic HEAD-to-GET mapping
+ *  - Automatic background suspension on iOS
+ *
+ *  Instances can be created and used from any thread. The main thread's run loop
+ *  should be running so that internal callbacks (Bonjour registration, delegate
+ *  notifications, NAT port mapping) are dispatched correctly.
+ *
+ *  @note The server cannot be deallocated while running due to internal retain
+ *        cycles with dispatch sources. Always call @c -stop before releasing.
  */
 @interface DZWebServer : NSObject
 
 /**
- *  Sets the delegate for the server.
+ *  @brief The delegate that receives server lifecycle and connectivity events.
+ *
+ *  Delegate methods are always called on the main thread.
+ *
+ *  The default value is @c nil.
+ *
+ *  @see DZWebServerDelegate
  */
 @property(nonatomic, weak, nullable) id<DZWebServerDelegate> delegate;
 
 /**
- *  Returns YES if the server is currently running.
+ *  @brief Indicates whether the server is currently running.
+ *
+ *  Returns @c YES after a successful call to @c -startWithOptions:error: and
+ *  until @c -stop is called. On iOS, this property remains @c YES even while the
+ *  server is suspended in the background (if auto-suspend is enabled), though the
+ *  server is not actively accepting connections in that state.
  */
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 
 /**
- *  Returns the port used by the server.
+ *  @brief The TCP port the server is listening on.
  *
- *  @warning This property is only valid if the server is running.
+ *  If port @c 0 was specified in the options (the default), this property returns
+ *  the actual port selected by the operating system.
+ *
+ *  @warning This property is only valid while the server is running. Returns @c 0
+ *           when the server is stopped.
  */
 @property(nonatomic, readonly) NSUInteger port;
 
 /**
- *  Returns the Bonjour name used by the server.
+ *  @brief The Bonjour service name the server registered with.
  *
- *  @warning This property is only valid if the server is running and Bonjour
- *  registration has successfully completed, which can take up to a few seconds.
+ *  Returns @c nil if Bonjour is disabled or if registration has not yet completed.
+ *
+ *  @warning This property is only valid while the server is running and Bonjour
+ *           registration has successfully completed, which can take several seconds.
+ *
+ *  @see DZWebServerOption_BonjourName
  */
 @property(nonatomic, readonly, copy, nullable) NSString* bonjourName;
 
 /**
- *  Returns the Bonjour service type used by the server.
+ *  @brief The Bonjour service type the server registered with (e.g. @c @@"_http._tcp.").
  *
- *  @warning This property is only valid if the server is running and Bonjour
- *  registration has successfully completed, which can take up to a few seconds.
+ *  Returns @c nil if Bonjour is disabled or if registration has not yet completed.
+ *
+ *  @warning This property is only valid while the server is running and Bonjour
+ *           registration has successfully completed, which can take several seconds.
+ *
+ *  @see DZWebServerOption_BonjourType
  */
 @property(nonatomic, readonly, copy, nullable) NSString* bonjourType;
 
 /**
- *  This method is the designated initializer for the class.
+ *  @brief Creates a new server instance with no handlers or configuration.
+ *
+ *  The server is not started after initialization. Add handlers via the
+ *  @c -addHandlerWithMatchBlock:processBlock: family of methods, then call
+ *  @c -startWithOptions:error: or one of the convenience start methods.
+ *
+ *  @return A new @c DZWebServer instance.
  */
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 
 /**
- *  Adds to the server a handler that generates responses synchronously when handling incoming HTTP requests.
+ *  @brief Adds a handler with custom match logic and synchronous response generation.
  *
- *  Handlers are called in a LIFO queue, so if multiple handlers can potentially
- *  respond to a given request, the latest added one wins.
+ *  This is the most flexible handler registration method. The match block is
+ *  called for every incoming request to determine if this handler should process
+ *  it. If the match block returns a non-nil request object, the process block
+ *  is called to generate the response.
  *
- *  @warning Addling handlers while the server is running is not allowed.
+ *  Handlers are evaluated in LIFO order: the most recently added handler that
+ *  matches a request wins.
+ *
+ *  Internally, the synchronous process block is wrapped in an asynchronous block
+ *  that calls the completion handler immediately.
+ *
+ *  @param matchBlock   A block that inspects the incoming request metadata and
+ *                      returns a @c DZWebServerRequest instance if this handler
+ *                      should process it, or @c nil to pass.
+ *  @param processBlock A block that receives the fully loaded request and returns
+ *                      a @c DZWebServerResponse synchronously.
+ *
+ *  @warning Adding handlers while the server is running is not allowed.
+ *
+ *  @see -addHandlerWithMatchBlock:asyncProcessBlock:
  */
 - (void)addHandlerWithMatchBlock:(DZWebServerMatchBlock)matchBlock processBlock:(DZWebServerProcessBlock)processBlock;
 
 /**
- *  Adds to the server a handler that generates responses asynchronously when handling incoming HTTP requests.
+ *  @brief Adds a handler with custom match logic and asynchronous response generation.
  *
- *  Handlers are called in a LIFO queue, so if multiple handlers can potentially
- *  respond to a given request, the latest added one wins.
+ *  The match block is called for every incoming request. If it returns a non-nil
+ *  request object, the async process block is called to generate the response.
+ *  The process block must eventually call its completion block exactly once.
  *
- *  @warning Addling handlers while the server is running is not allowed.
+ *  Handlers are evaluated in LIFO order: the most recently added handler that
+ *  matches a request wins. Internally, the handler is inserted at index 0 of
+ *  the handler array.
+ *
+ *  @param matchBlock   A block that inspects the incoming request metadata and
+ *                      returns a @c DZWebServerRequest instance if this handler
+ *                      should process it, or @c nil to pass.
+ *  @param processBlock A block that receives the fully loaded request and must
+ *                      call the provided completion block with a response.
+ *
+ *  @warning Adding handlers while the server is running is not allowed.
+ *
+ *  @see -addHandlerWithMatchBlock:processBlock:
  */
 - (void)addHandlerWithMatchBlock:(DZWebServerMatchBlock)matchBlock asyncProcessBlock:(DZWebServerAsyncProcessBlock)processBlock;
 
 /**
- *  Removes all handlers previously added to the server.
+ *  @brief Removes all handlers previously added to the server.
  *
  *  @warning Removing handlers while the server is running is not allowed.
  */
 - (void)removeAllHandlers;
 
 /**
- *  Starts the server with explicit options. This method is the designated way
- *  to start the server.
+ *  @brief Starts the server with the specified options.
  *
- *  Returns NO if the server failed to start and sets "error" argument if not NULL.
+ *  This is the designated start method. It opens IPv4 and IPv6 listening sockets,
+ *  configures authentication (if requested), starts Bonjour registration and NAT
+ *  port mapping (if requested), and begins accepting connections.
+ *
+ *  On iOS, if @c DZWebServerOption_AutomaticallySuspendInBackground is @c YES
+ *  (the default), the server registers for app lifecycle notifications to
+ *  automatically suspend and resume.
+ *
+ *  @param options A dictionary of @c DZWebServerOption_* keys and their values,
+ *                 or @c nil to use all defaults.
+ *  @param error   On failure, set to an @c NSError describing the cause (e.g.
+ *                 POSIX error from @c socket(), @c bind(), or @c listen()).
+ *                 Pass @c NULL if you do not need error information.
+ *
+ *  @return @c YES if the server started successfully, @c NO otherwise.
+ *
+ *  @warning Calling this method on a server that is already running triggers a
+ *           debug assertion and returns @c NO.
+ *
+ *  @see -stop
  */
 - (BOOL)startWithOptions:(nullable NSDictionary<NSString*, id>*)options error:(NSError** _Nullable)error;
 
 /**
- *  Stops the server and prevents it to accepts new HTTP requests.
+ *  @brief Stops the server and prevents it from accepting new HTTP requests.
  *
- *  @warning Stopping the server does not abort DZWebServerConnection instances
- *  currently handling already received HTTP requests. These connections will
- *  continue to execute normally until completion.
+ *  Closes the listening sockets, cancels Bonjour registration and NAT port
+ *  mapping, and removes app lifecycle observers (on iOS). The @c port property
+ *  is reset to @c 0.
+ *
+ *  @warning Stopping the server does not abort @c DZWebServerConnection instances
+ *           currently handling in-flight HTTP requests. Those connections will
+ *           continue executing until completion.
+ *
+ *  @warning Calling this method on a server that is not running triggers a debug
+ *           assertion.
+ *
+ *  @see -startWithOptions:error:
  */
 - (void)stop;
 
 @end
 
+/**
+ *  @brief Convenience methods for starting the server and accessing its URLs.
+ */
 @interface DZWebServer (Extensions)
 
 /**
- *  Returns the server's URL.
+ *  @brief The URL at which the server is reachable on the local network.
  *
- *  @warning This property is only valid if the server is running.
+ *  Constructed from the device's primary IPv4 address and the server's port.
+ *  If bound to localhost, the hostname is @c "localhost".
+ *
+ *  Returns @c nil if the server is not running or no suitable IP address is found.
+ *
+ *  @warning This property is only valid while the server is running.
  */
 @property(nonatomic, readonly, nullable) NSURL* serverURL;
 
 /**
- *  Returns the server's Bonjour URL.
+ *  @brief The URL at which the server is reachable via its Bonjour hostname.
  *
- *  @warning This property is only valid if the server is running and Bonjour
- *  registration has successfully completed, which can take up to a few seconds.
- *  Also be aware this property will not automatically update if the Bonjour hostname
- *  has been dynamically changed after the server started running (this should be rare).
+ *  Derived from the Bonjour resolution target host. The trailing period in the
+ *  Bonjour domain name is stripped.
+ *
+ *  Returns @c nil if Bonjour is disabled, the server is not running, or Bonjour
+ *  resolution has not yet completed.
+ *
+ *  @warning This property will not automatically update if the Bonjour hostname
+ *           changes dynamically after the server started (this should be rare).
+ *
+ *  @see DZWebServerOption_BonjourName
  */
 @property(nonatomic, readonly, nullable) NSURL* bonjourServerURL;
 
 /**
- *  Returns the server's public URL.
+ *  @brief The externally reachable URL via NAT port mapping.
  *
- *  @warning This property is only valid if the server is running and NAT port
- *  mapping is active.
+ *  Constructed from the external IP address and port reported by the NAT gateway.
+ *  Returns @c nil if NAT port mapping was not requested, the server is not
+ *  running, or the mapping has not been established.
+ *
+ *  @warning The external port may differ from the local server port.
+ *
+ *  @see DZWebServerOption_RequestNATPortMapping
  */
 @property(nonatomic, readonly, nullable) NSURL* publicServerURL;
 
 /**
- *  Starts the server on port 8080 (OS X & iOS Simulator) or port 80 (iOS)
- *  using the default Bonjour name.
+ *  @brief Starts the server with default settings.
  *
- *  Returns NO if the server failed to start.
+ *  Uses port 8080 on macOS and the iOS Simulator, or port 80 on iOS devices.
+ *  Bonjour is enabled with the default name (the server class name).
+ *
+ *  @return @c YES if the server started successfully, @c NO otherwise.
+ *
+ *  @see -startWithPort:bonjourName:
+ *  @see -startWithOptions:error:
  */
 - (BOOL)start;
 
 /**
- *  Starts the server on a given port and with a specific Bonjour name.
- *  Pass a nil Bonjour name to disable Bonjour entirely or an empty string to
- *  use the default name.
+ *  @brief Starts the server on a specific port with a given Bonjour name.
  *
- *  Returns NO if the server failed to start.
+ *  @param port The TCP port to listen on.
+ *  @param name The Bonjour service name. Pass @c nil to disable Bonjour, or
+ *              an empty string to use the default name (the server class name).
+ *
+ *  @return @c YES if the server started successfully, @c NO otherwise.
+ *
+ *  @see -startWithOptions:error:
  */
 - (BOOL)startWithPort:(NSUInteger)port bonjourName:(nullable NSString*)name;
 
 #if !TARGET_OS_IPHONE
 
 /**
- *  Runs the server synchronously using -startWithPort:bonjourName: until a
- *  SIGINT signal is received i.e. Ctrl-C. This method is intended to be used
- *  by command line tools.
+ *  @brief Runs the server synchronously until a SIGINT or SIGTERM signal is received.
  *
- *  Returns NO if the server failed to start.
+ *  Convenience wrapper that calls @c -startWithPort:bonjourName: and then blocks
+ *  on the main run loop until Ctrl-C (or a termination signal) is sent. Intended
+ *  for command-line tools.
  *
- *  @warning This method must be used from the main thread only.
+ *  @param port The TCP port to listen on.
+ *  @param name The Bonjour service name. Pass @c nil to disable Bonjour, or
+ *              an empty string to use the default name.
+ *
+ *  @return @c YES if the server ran and was stopped by a signal. @c NO if the
+ *          server failed to start.
+ *
+ *  @warning This method must be called from the main thread only.
+ *
+ *  @see -runWithOptions:error:
  */
 - (BOOL)runWithPort:(NSUInteger)port bonjourName:(nullable NSString*)name;
 
 /**
- *  Runs the server synchronously using -startWithOptions: until a SIGTERM or
- *  SIGINT signal is received i.e. Ctrl-C in Terminal. This method is intended to
- *  be used by command line tools.
+ *  @brief Runs the server synchronously with full options until a SIGINT or SIGTERM
+ *         signal is received.
  *
- *  Returns NO if the server failed to start and sets "error" argument if not NULL.
+ *  Convenience wrapper that calls @c -startWithOptions:error: and then blocks on
+ *  the main run loop until a termination signal is sent. Main thread run loop
+ *  sources are drained after stopping to ensure all pending callbacks execute.
+ *  Intended for command-line tools.
  *
- *  @warning This method must be used from the main thread only.
+ *  @param options A dictionary of @c DZWebServerOption_* keys, or @c nil for defaults.
+ *  @param error   On failure, set to an @c NSError describing the cause. Pass @c NULL
+ *                 if you do not need error information.
+ *
+ *  @return @c YES if the server ran and was stopped by a signal. @c NO if the
+ *          server failed to start.
+ *
+ *  @warning This method must be called from the main thread only.
+ *
+ *  @see -startWithOptions:error:
  */
 - (BOOL)runWithOptions:(nullable NSDictionary<NSString*, id>*)options error:(NSError** _Nullable)error;
 
@@ -464,182 +793,347 @@ extern NSString* const DZWebServerAuthenticationMethod_DigestAccess;
 
 @end
 
+/**
+ *  @brief Convenience methods for adding common handler patterns (by method, path, or regex).
+ */
 @interface DZWebServer (Handlers)
 
 /**
- *  Adds a default handler to the server to handle all incoming HTTP requests
- *  with a given HTTP method and generate responses synchronously.
+ *  @brief Adds a catch-all handler for a given HTTP method with synchronous response generation.
+ *
+ *  Matches any request whose HTTP method equals @p method, regardless of the
+ *  URL path. Useful as a fallback handler for a specific method.
+ *
+ *  @param method The HTTP method to match (e.g. @c @@"GET", @c @@"POST").
+ *  @param aClass The @c DZWebServerRequest subclass to instantiate for matched
+ *                requests (e.g. @c [DZWebServerDataRequest class]).
+ *  @param block  A block that receives the fully loaded request and returns a
+ *                response synchronously.
+ *
+ *  @warning Adding handlers while the server is running is not allowed.
  */
 - (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass processBlock:(DZWebServerProcessBlock)block;
 
 /**
- *  Adds a default handler to the server to handle all incoming HTTP requests
- *  with a given HTTP method and generate responses asynchronously.
+ *  @brief Adds a catch-all handler for a given HTTP method with asynchronous response generation.
+ *
+ *  Matches any request whose HTTP method equals @p method, regardless of the
+ *  URL path.
+ *
+ *  @param method The HTTP method to match (e.g. @c @@"GET", @c @@"POST").
+ *  @param aClass The @c DZWebServerRequest subclass to instantiate for matched
+ *                requests.
+ *  @param block  A block that receives the fully loaded request and must call
+ *                its completion block with a response.
+ *
+ *  @warning Adding handlers while the server is running is not allowed.
  */
 - (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass asyncProcessBlock:(DZWebServerAsyncProcessBlock)block;
 
 /**
- *  Adds a handler to the server to handle incoming HTTP requests with a given
- *  HTTP method and a specific case-insensitive path  and generate responses
- *  synchronously.
+ *  @brief Adds a handler for a specific HTTP method and exact path with synchronous
+ *         response generation.
+ *
+ *  The path is compared case-insensitively. Only requests whose method and path
+ *  both match will be handled.
+ *
+ *  @param method The HTTP method to match (e.g. @c @@"GET", @c @@"POST").
+ *  @param path   The URL path to match (must start with @c @@"/"). Compared
+ *                case-insensitively.
+ *  @param aClass The @c DZWebServerRequest subclass to instantiate for matched
+ *                requests.
+ *  @param block  A block that receives the fully loaded request and returns a
+ *                response synchronously.
+ *
+ *  @warning Adding handlers while the server is running is not allowed.
+ *  @warning The @p path must start with @c @@"/" and @p aClass must be a subclass
+ *           of @c DZWebServerRequest, or a debug assertion is triggered.
  */
 - (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass processBlock:(DZWebServerProcessBlock)block;
 
 /**
- *  Adds a handler to the server to handle incoming HTTP requests with a given
- *  HTTP method and a specific case-insensitive path and generate responses
- *  asynchronously.
+ *  @brief Adds a handler for a specific HTTP method and exact path with asynchronous
+ *         response generation.
+ *
+ *  The path is compared case-insensitively. Only requests whose method and path
+ *  both match will be handled.
+ *
+ *  @param method The HTTP method to match (e.g. @c @@"GET", @c @@"POST").
+ *  @param path   The URL path to match (must start with @c @@"/"). Compared
+ *                case-insensitively.
+ *  @param aClass The @c DZWebServerRequest subclass to instantiate for matched
+ *                requests.
+ *  @param block  A block that receives the fully loaded request and must call
+ *                its completion block with a response.
+ *
+ *  @warning Adding handlers while the server is running is not allowed.
+ *  @warning The @p path must start with @c @@"/" and @p aClass must be a subclass
+ *           of @c DZWebServerRequest, or a debug assertion is triggered.
  */
 - (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass asyncProcessBlock:(DZWebServerAsyncProcessBlock)block;
 
 /**
- *  Adds a handler to the server to handle incoming HTTP requests with a given
- *  HTTP method and a path matching a case-insensitive regular expression and
- *  generate responses synchronously.
+ *  @brief Adds a handler for a specific HTTP method and a path matching a regular
+ *         expression, with synchronous response generation.
+ *
+ *  The regex is compiled with @c NSRegularExpressionCaseInsensitive. Capture groups
+ *  in the regex are extracted and stored as an @c NSArray<NSString *> in the
+ *  request's attributes under the key @c DZWebServerRequestAttribute_RegexCaptures.
+ *
+ *  @param method The HTTP method to match (e.g. @c @@"GET", @c @@"POST").
+ *  @param regex  A regular expression pattern to match against the URL path.
+ *  @param aClass The @c DZWebServerRequest subclass to instantiate for matched
+ *                requests.
+ *  @param block  A block that receives the fully loaded request and returns a
+ *                response synchronously.
+ *
+ *  @warning Adding handlers while the server is running is not allowed.
+ *  @warning The @p regex must be a valid @c NSRegularExpression pattern and
+ *           @p aClass must be a subclass of @c DZWebServerRequest, or a debug
+ *           assertion is triggered.
  */
 - (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass processBlock:(DZWebServerProcessBlock)block;
 
 /**
- *  Adds a handler to the server to handle incoming HTTP requests with a given
- *  HTTP method and a path matching a case-insensitive regular expression and
- *  generate responses asynchronously.
+ *  @brief Adds a handler for a specific HTTP method and a path matching a regular
+ *         expression, with asynchronous response generation.
+ *
+ *  The regex is compiled with @c NSRegularExpressionCaseInsensitive. Capture groups
+ *  in the regex are extracted and stored as an @c NSArray<NSString *> in the
+ *  request's attributes under the key @c DZWebServerRequestAttribute_RegexCaptures.
+ *
+ *  @param method The HTTP method to match (e.g. @c @@"GET", @c @@"POST").
+ *  @param regex  A regular expression pattern to match against the URL path.
+ *  @param aClass The @c DZWebServerRequest subclass to instantiate for matched
+ *                requests.
+ *  @param block  A block that receives the fully loaded request and must call
+ *                its completion block with a response.
+ *
+ *  @warning Adding handlers while the server is running is not allowed.
+ *  @warning The @p regex must be a valid @c NSRegularExpression pattern and
+ *           @p aClass must be a subclass of @c DZWebServerRequest, or a debug
+ *           assertion is triggered.
  */
 - (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass asyncProcessBlock:(DZWebServerAsyncProcessBlock)block;
 
 @end
 
+/**
+ *  @brief High-level convenience methods for serving static content via GET requests.
+ */
 @interface DZWebServer (GETHandlers)
 
 /**
- *  Adds a handler to the server to respond to incoming "GET" HTTP requests
- *  with a specific case-insensitive path with in-memory data.
+ *  @brief Adds a GET handler that serves in-memory data at a specific path.
+ *
+ *  Responds to @c GET requests matching the given path (case-insensitive) with
+ *  the provided static data. The response includes a @c Cache-Control header
+ *  with the specified max-age.
+ *
+ *  @param path        The URL path to match (must start with @c @@"/").
+ *  @param staticData  The data to serve as the response body.
+ *  @param contentType The MIME type for the @c Content-Type header, or @c nil.
+ *  @param cacheAge    The @c Cache-Control max-age value in seconds. Pass @c 0
+ *                     to disable caching.
+ *
+ *  @warning Adding handlers while the server is running is not allowed.
  */
 - (void)addGETHandlerForPath:(NSString*)path staticData:(NSData*)staticData contentType:(nullable NSString*)contentType cacheAge:(NSUInteger)cacheAge;
 
 /**
- *  Adds a handler to the server to respond to incoming "GET" HTTP requests
- *  with a specific case-insensitive path with a file.
+ *  @brief Adds a GET handler that serves a file at a specific path.
+ *
+ *  Responds to @c GET requests matching the given path (case-insensitive) with
+ *  the contents of the specified file. When range requests are enabled, the
+ *  @c Accept-Ranges: bytes header is included and partial content responses
+ *  (HTTP 206) are supported.
+ *
+ *  @param path               The URL path to match (must start with @c @@"/").
+ *  @param filePath           The absolute file system path to the file to serve.
+ *  @param isAttachment       If @c YES, the response includes a
+ *                            @c Content-Disposition: attachment header, prompting
+ *                            the client to download rather than display inline.
+ *  @param cacheAge           The @c Cache-Control max-age value in seconds. Pass
+ *                            @c 0 to disable caching.
+ *  @param allowRangeRequests If @c YES, the handler honors @c Range headers and
+ *                            serves partial content.
+ *
+ *  @warning Adding handlers while the server is running is not allowed.
  */
 - (void)addGETHandlerForPath:(NSString*)path filePath:(NSString*)filePath isAttachment:(BOOL)isAttachment cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests;
 
 /**
- *  Adds a handler to the server to respond to incoming "GET" HTTP requests
- *  with a case-insensitive path inside a base path with the corresponding file
- *  inside a local directory. If no local file matches the request path, a 401
- *  HTTP status code is returned to the client.
+ *  @brief Adds a GET handler that serves a local directory under a base URL path.
  *
- *  The "indexFilename" argument allows to specify an "index" file name to use
- *  when the request path corresponds to a directory.
+ *  Responds to @c GET requests whose path begins with @p basePath by mapping the
+ *  remaining path components to files inside @p directoryPath. If the resolved
+ *  path is a directory and @p indexFilename is specified, the handler looks for
+ *  that index file within the directory. If no matching file or directory is
+ *  found, a 404 Not Found response is returned.
+ *
+ *  When a directory is requested and no index file is found (or none was
+ *  specified), an auto-generated HTML directory listing is returned.
+ *
+ *  @param basePath           The URL base path (must start and end with @c @@"/",
+ *                            e.g. @c @@"/files/").
+ *  @param directoryPath      The absolute file system path to the directory to serve.
+ *  @param indexFilename      The filename to use as a directory index
+ *                            (e.g. @c @@"index.html"), or @c nil to serve a
+ *                            generated directory listing.
+ *  @param cacheAge           The @c Cache-Control max-age value in seconds. Pass
+ *                            @c 0 to disable caching.
+ *  @param allowRangeRequests If @c YES, file responses honor @c Range headers and
+ *                            serve partial content.
+ *
+ *  @warning Adding handlers while the server is running is not allowed.
+ *  @warning The @p basePath must start and end with @c @@"/", or a debug assertion
+ *           is triggered.
  */
 - (void)addGETHandlerForBasePath:(NSString*)basePath directoryPath:(NSString*)directoryPath indexFilename:(nullable NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests;
 
 @end
 
 /**
- *  DZWebServer provides its own built-in logging facility which is used by
- *  default. It simply sends log messages to stderr assuming it is connected
- *  to a terminal type device.
+ *  @brief Logging configuration and convenience methods.
  *
- *  DZWebServer is also compatible with a limited set of third-party logging
- *  facilities. If one of them is available at compile time, DZWebServer will
- *  automatically use it in place of the built-in one.
+ *  @c DZWebServer provides a built-in logging facility that sends messages to
+ *  @c stderr when connected to a terminal device. The default log level is
+ *  @c INFO (or @c DEBUG when the @c DEBUG preprocessor constant evaluates to
+ *  non-zero at compile time).
  *
- *  Currently supported third-party logging facilities are:
- *  - XLFacility (by the same author as DZWebServer): https://github.com/swisspol/XLFacility
+ *  @discussion
+ *  The logging backend is selected at compile time in the following priority order:
  *
- *  For the built-in logging facility, the default logging level is INFO
- *  (or DEBUG if the preprocessor constant "DEBUG" evaluates to non-zero at
- *  compile time).
+ *  1. **Custom header**: Define @c __DZWEBSERVER_LOGGING_HEADER__ as a quoted header
+ *     file name (e.g. @c \\"MyLogging.h\\") in your build settings. This header must
+ *     define the macros @c DWS_LOG_DEBUG, @c DWS_LOG_VERBOSE, @c DWS_LOG_INFO,
+ *     @c DWS_LOG_WARNING, and @c DWS_LOG_ERROR (with @c NSLog()-compatible signatures).
+ *     @c DWS_LOG_DEBUG should be a no-op unless @c DEBUG is non-zero.
  *
- *  It's possible to have DZWebServer use a custom logging facility by defining
- *  the "__DZWEBSERVER_LOGGING_HEADER__" preprocessor constant in Xcode build
- *  settings to the name of a custom header file (escaped like \"MyLogging.h\").
- *  This header file must define the following set of macros:
+ *  2. **XLFacility**: If @c XLFacilityMacros.h is available at compile time,
+ *     it is used automatically.
  *
- *    DWS_LOG_DEBUG(...)
- *    DWS_LOG_VERBOSE(...)
- *    DWS_LOG_INFO(...)
- *    DWS_LOG_WARNING(...)
- *    DWS_LOG_ERROR(...)
+ *  3. **Built-in logger**: Logs to @c stderr in @c [LEVEL] message format. Can be
+ *     overridden at runtime via @c +setBuiltInLogger:.
  *
- *  IMPORTANT: These macros must behave like NSLog(). Furthermore the DWS_LOG_DEBUG()
- *  macro should not do anything unless the preprocessor constant "DEBUG" evaluates
- *  to non-zero.
- *
- *  The logging methods below send log messages to the same logging facility
- *  used by DZWebServer. They can be used for consistency wherever you interact
- *  with DZWebServer in your code (e.g. in the implementation of handlers).
+ *  The instance logging methods below forward to the active logging facility and
+ *  can be used in handler implementations for consistent log output.
  */
 @interface DZWebServer (Logging)
 
 /**
- *  Sets the log level of the logging facility below which log messages are discarded.
+ *  @brief Sets the minimum log level; messages below this level are discarded.
  *
- *  @warning The interpretation of the "level" argument depends on the logging
- *  facility used at compile time.
+ *  For the built-in logging facility, the levels are:
+ *  - @c 0 = DEBUG
+ *  - @c 1 = VERBOSE
+ *  - @c 2 = INFO (default in Release)
+ *  - @c 3 = WARNING
+ *  - @c 4 = ERROR
  *
- *  If using the built-in logging facility, the log levels are as follow:
- *  DEBUG = 0
- *  VERBOSE = 1
- *  INFO = 2
- *  WARNING = 3
- *  ERROR = 4
+ *  The default level is @c 0 (DEBUG) when @c DEBUG is defined, or @c 2 (INFO) otherwise.
+ *
+ *  @param level The minimum log level to display.
+ *
+ *  @warning The interpretation of @p level depends on the logging facility active
+ *           at compile time. When using XLFacility, this sets
+ *           @c XLSharedFacility.minLogLevel. When using a custom logging header,
+ *           this method has no effect.
  */
 + (void)setLogLevel:(int)level;
 
 /**
- *  Set a logger to be used instead of the built-in logger which logs to stderr.
+ *  @brief Replaces the built-in stderr logger with a custom block.
  *
- *  IMPORTANT: In order for this override to work, you should not be specifying
- *  a custom logger at compile time with "__DZWEBSERVER_LOGGING_HEADER__".
+ *  When set, all log messages that would normally be written to @c stderr are
+ *  instead passed to the provided block. Pass @c nil to restore the default
+ *  stderr output.
+ *
+ *  @param block A block that receives the log level and pre-formatted message,
+ *               or @c nil to restore the default logger.
+ *
+ *  @warning This method only works when the built-in logging facility is active.
+ *           If a custom logging header is specified via @c __DZWEBSERVER_LOGGING_HEADER__
+ *           or if XLFacility is detected at compile time, this method triggers a
+ *           debug assertion and has no effect.
+ *
+ *  @see DZWebServerBuiltInLoggerBlock
  */
 + (void)setBuiltInLogger:(nullable DZWebServerBuiltInLoggerBlock)block;
 
 /**
- *  Logs a message to the logging facility at the VERBOSE level.
+ *  @brief Logs a formatted message at the VERBOSE level (level 1).
+ *
+ *  @param format A format string followed by a variable number of arguments.
+ *
+ *  @note Not available in Swift. Use @c logVerbose(_:) instead.
  */
 - (void)logVerbose:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2) NS_SWIFT_UNAVAILABLE("Use logVerbose(_:) instead");
 
 /**
- *  Logs a pre-formatted message to the logging facility at the VERBOSE level.
+ *  @brief Logs a pre-formatted message at the VERBOSE level (level 1).
  *
- *  This is the Swift-friendly variant of logVerbose:.
+ *  Swift-friendly alternative to @c -logVerbose: that accepts a single
+ *  pre-formatted string instead of a variadic format string.
+ *
+ *  @param message The message to log.
  */
 - (void)logVerboseMessage:(NSString*)message NS_SWIFT_NAME(logVerbose(_:));
 
 /**
- *  Logs a message to the logging facility at the INFO level.
+ *  @brief Logs a formatted message at the INFO level (level 2).
+ *
+ *  @param format A format string followed by a variable number of arguments.
+ *
+ *  @note Not available in Swift. Use @c logInfo(_:) instead.
  */
 - (void)logInfo:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2) NS_SWIFT_UNAVAILABLE("Use logInfo(_:) instead");
 
 /**
- *  Logs a pre-formatted message to the logging facility at the INFO level.
+ *  @brief Logs a pre-formatted message at the INFO level (level 2).
  *
- *  This is the Swift-friendly variant of logInfo:.
+ *  Swift-friendly alternative to @c -logInfo: that accepts a single
+ *  pre-formatted string instead of a variadic format string.
+ *
+ *  @param message The message to log.
  */
 - (void)logInfoMessage:(NSString*)message NS_SWIFT_NAME(logInfo(_:));
 
 /**
- *  Logs a message to the logging facility at the WARNING level.
+ *  @brief Logs a formatted message at the WARNING level (level 3).
+ *
+ *  @param format A format string followed by a variable number of arguments.
+ *
+ *  @note Not available in Swift. Use @c logWarning(_:) instead.
  */
 - (void)logWarning:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2) NS_SWIFT_UNAVAILABLE("Use logWarning(_:) instead");
 
 /**
- *  Logs a pre-formatted message to the logging facility at the WARNING level.
+ *  @brief Logs a pre-formatted message at the WARNING level (level 3).
  *
- *  This is the Swift-friendly variant of logWarning:.
+ *  Swift-friendly alternative to @c -logWarning: that accepts a single
+ *  pre-formatted string instead of a variadic format string.
+ *
+ *  @param message The message to log.
  */
 - (void)logWarningMessage:(NSString*)message NS_SWIFT_NAME(logWarning(_:));
 
 /**
- *  Logs a message to the logging facility at the ERROR level.
+ *  @brief Logs a formatted message at the ERROR level (level 4).
+ *
+ *  @param format A format string followed by a variable number of arguments.
+ *
+ *  @note Not available in Swift. Use @c logError(_:) instead.
  */
 - (void)logError:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2) NS_SWIFT_UNAVAILABLE("Use logError(_:) instead");
 
 /**
- *  Logs a pre-formatted message to the logging facility at the ERROR level.
+ *  @brief Logs a pre-formatted message at the ERROR level (level 4).
  *
- *  This is the Swift-friendly variant of logError:.
+ *  Swift-friendly alternative to @c -logError: that accepts a single
+ *  pre-formatted string instead of a variadic format string.
+ *
+ *  @param message The message to log.
  */
 - (void)logErrorMessage:(NSString*)message NS_SWIFT_NAME(logError(_:));
 
@@ -647,21 +1141,43 @@ extern NSString* const DZWebServerAuthenticationMethod_DigestAccess;
 
 #ifdef __DZWEBSERVER_ENABLE_TESTING__
 
+/**
+ *  @brief Recording and playback testing support.
+ *
+ *  Available only when @c __DZWEBSERVER_ENABLE_TESTING__ is defined at compile time.
+ *  Provides methods to record raw HTTP traffic and replay it for automated
+ *  regression testing.
+ */
 @interface DZWebServer (Testing)
 
 /**
- *  Activates recording of HTTP requests and responses which create files in the
- *  current directory containing the raw data for all requests and responses.
+ *  @brief Controls whether HTTP request/response recording is active.
  *
- *  @warning The current directory must not contain any prior recording files.
+ *  When enabled, raw data for all incoming HTTP requests and outgoing responses
+ *  is written to files in the current working directory. These files can later
+ *  be used with @c -runTestsWithOptions:inDirectory: for regression testing.
+ *
+ *  The default value is @c NO.
+ *
+ *  @warning The current working directory must not contain any prior recording
+ *           files when enabling recording.
  */
 @property(nonatomic, getter=isRecordingEnabled) BOOL recordingEnabled;
 
 /**
- *  Runs tests by playing back pre-recorded HTTP requests in the given directory
- *  and comparing the generated responses with the pre-recorded ones.
+ *  @brief Replays pre-recorded HTTP requests and validates the server's responses.
  *
- *  Returns the number of failed tests or -1 if server failed to start.
+ *  Starts the server with the given options, then reads @c .request files from
+ *  the specified directory (sorted by name), sends them to the server, and
+ *  compares the actual responses against corresponding @c .response files.
+ *  Status codes, headers (except @c Date and @c Etag), and bodies are compared.
+ *
+ *  @param options A dictionary of @c DZWebServerOption_* keys, or @c nil for defaults.
+ *  @param path    The directory containing pre-recorded @c .request and @c .response files.
+ *
+ *  @return The number of failed tests, or @c -1 if the server failed to start.
+ *
+ *  @warning This method must be called from the main thread only.
  */
 - (NSInteger)runTestsWithOptions:(nullable NSDictionary<NSString*, id>*)options inDirectory:(NSString*)path;
 

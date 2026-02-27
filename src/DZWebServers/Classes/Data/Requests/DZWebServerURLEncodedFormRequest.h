@@ -30,23 +30,58 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- *  The DZWebServerURLEncodedFormRequest subclass of DZWebServerRequest
- *  parses the body of the HTTP request as a URL encoded form using
- *  DZWebServerParseURLEncodedForm().
+ * @brief A request subclass that automatically parses URL-encoded form bodies.
+ *
+ * @discussion @c DZWebServerURLEncodedFormRequest extends @c DZWebServerDataRequest to
+ * handle HTTP requests whose body is encoded as @c application/x-www-form-urlencoded
+ * (the default encoding for HTML form submissions).
+ *
+ * When the connection finishes receiving the request body, this class decodes the raw
+ * data into a dictionary of unescaped control names and values using
+ * @c DZWebServerParseURLEncodedForm(). The text encoding is determined from the
+ * @c charset parameter of the @c Content-Type header, falling back to UTF-8 if absent.
+ *
+ * The parsed key-value pairs are accessible through the @c arguments property.
+ *
+ * @note This class is intended for bodies encoded as
+ *       @c application/x-www-form-urlencoded. For multipart form data, use
+ *       @c DZWebServerMultiPartFormRequest instead.
+ *
+ * @see DZWebServerDataRequest
+ * @see DZWebServerMultiPartFormRequest
+ * @see DZWebServerParseURLEncodedForm
  */
 @interface DZWebServerURLEncodedFormRequest : DZWebServerDataRequest
 
 /**
- *  Returns the unescaped control names and values for the URL encoded form.
+ * @brief Returns the parsed form fields as a dictionary of unescaped control names and values.
  *
- *  The text encoding used to interpret the data is extracted from the
- *  "Content-Type" header or defaults to UTF-8.
+ * @discussion The dictionary keys are the form control names and the values are their
+ * corresponding submitted values, both fully percent-decoded.
+ *
+ * The text encoding used to interpret the raw body data is extracted from the
+ * @c charset parameter of the @c Content-Type header. If no charset is specified,
+ * UTF-8 is used as the default.
+ *
+ * This property is populated after the request body has been fully received and
+ * processed (i.e., after @c -close: completes successfully). Accessing it before
+ * that point returns @c nil.
+ *
+ * @note Duplicate form control names are not supported; if the encoded form contains
+ *       multiple values for the same name, only one will be retained.
+ *
+ * @see DZWebServerParseURLEncodedForm
  */
 @property(nonatomic, copy, readonly) NSDictionary<NSString*, NSString*>* arguments;
 
 /**
- *  Returns the MIME type for URL encoded forms
- *  i.e. "application/x-www-form-urlencoded".
+ * @brief Returns the MIME type for URL-encoded form submissions.
+ *
+ * @discussion Always returns @c "application/x-www-form-urlencoded". This value can
+ * be used when registering a handler with @c DZWebServer to match incoming requests
+ * whose body is a URL-encoded form.
+ *
+ * @return The string @c "application/x-www-form-urlencoded".
  */
 + (NSString*)mimeType;
 

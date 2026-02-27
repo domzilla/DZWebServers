@@ -26,6 +26,46 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ *  @brief Umbrella header for the DZWebServers framework.
+ *
+ *  @discussion DZWebServers is a lightweight, GCD-based HTTP 1.1 server framework
+ *  designed for embedding directly in iOS and macOS applications. It requires no
+ *  third-party dependencies — only Foundation and CoreServices.
+ *
+ *  The framework provides three main capabilities:
+ *
+ *  - **HTTP Server** — @c DZWebServer is the core server class. It listens for
+ *    incoming connections on a configurable port and dispatches requests to
+ *    registered handler blocks. @c DZWebServerConnection manages individual
+ *    client connections.
+ *
+ *  - **WebDAV Server** — @c DZWebDAVServer extends @c DZWebServer with a
+ *    fully functional WebDAV interface, allowing clients to browse, upload,
+ *    download, move, copy, and delete files over the network.
+ *
+ *  - **File Upload UI** — @c DZWebUploader extends @c DZWebServer with a
+ *    browser-based file management interface (bundled HTML/CSS/JS), enabling
+ *    users to upload, download, and organize files from any web browser on
+ *    the local network.
+ *
+ *  Requests and responses are modeled as a class hierarchy:
+ *
+ *  - **Requests:** @c DZWebServerRequest (base), @c DZWebServerDataRequest,
+ *    @c DZWebServerFileRequest, @c DZWebServerMultiPartFormRequest,
+ *    @c DZWebServerURLEncodedFormRequest.
+ *
+ *  - **Responses:** @c DZWebServerResponse (base), @c DZWebServerDataResponse,
+ *    @c DZWebServerFileResponse, @c DZWebServerStreamedResponse,
+ *    @c DZWebServerErrorResponse.
+ *
+ *  To get started, import this umbrella header:
+ *
+ *  @code
+ *  #import <DZWebServers/DZWebServers.h>
+ *  @endcode
+ */
+
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN

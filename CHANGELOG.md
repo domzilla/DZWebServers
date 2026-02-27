@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Comprehensive HeaderDoc/Doxygen-style documentation for all public API declarations across all 17 public headers
+  - Classes, protocols, categories, properties, methods, typedefs, block types, enums, and constants
+  - Implementation-accurate details: default values, thread safety, edge cases, RFC references
+  - `@brief`, `@discussion`, `@param`, `@return`, `@note`, `@warning`, `@see` tags throughout
 - Swift interoperability audit of all public headers
   - `NS_ASSUME_NONNULL_BEGIN`/`END` on umbrella header and HTTP status codes header
   - `NS_DESIGNATED_INITIALIZER` on designated initializers across all classes

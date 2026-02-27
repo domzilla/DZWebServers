@@ -30,83 +30,202 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- *  The DZWebServerDataResponse subclass of DZWebServerResponse reads the body
- *  of the HTTP response from memory.
+ *  @brief A response subclass that serves an in-memory HTTP response body.
+ *
+ *  DZWebServerDataResponse reads the entire body of the HTTP response from an
+ *  @c NSData object held in memory. Use this class when the response payload is
+ *  small enough to fit comfortably in memory (e.g., JSON payloads, short HTML
+ *  pages, or small binary blobs).
+ *
+ *  The Extensions category provides additional convenience initializers for
+ *  common content types such as plain text, HTML, HTML templates, and JSON.
+ *
+ *  @see DZWebServerResponse
+ *  @see DZWebServerFileResponse
+ *  @see DZWebServerStreamedResponse
  */
 @interface DZWebServerDataResponse : DZWebServerResponse
-@property(nonatomic, copy) NSString* contentType;  // Redeclare as non-null
+
+/**
+ *  @brief The MIME content type of the response body.
+ *
+ *  Redeclared from the superclass as non-null because a data response always
+ *  carries a body and therefore must always have a content type.
+ */
+@property(nonatomic, copy) NSString* contentType;
 
 - (instancetype)init NS_UNAVAILABLE;
 
 /**
- *  Creates a response with data in memory and a given content type.
+ *  @brief Creates a response with the given in-memory data and content type.
+ *
+ *  @param data The response body data. Must not be @c nil.
+ *  @param type The MIME content type for the response (e.g., @c "application/octet-stream" ).
+ *
+ *  @return A new autoreleased data response instance.
+ *
+ *  @see -initWithData:contentType:
  */
 + (instancetype)responseWithData:(NSData*)data contentType:(NSString*)type;
 
 /**
- *  This method is the designated initializer for the class.
+ *  @brief Initializes a response with the given in-memory data and content type.
+ *
+ *  This is the designated initializer for the class. The response's
+ *  @c contentLength is automatically set to the length of @a data.
+ *
+ *  @param data The response body data. Must not be @c nil.
+ *  @param type The MIME content type for the response (e.g., @c "application/octet-stream" ).
+ *
+ *  @return An initialized data response instance.
  */
 - (instancetype)initWithData:(NSData*)data contentType:(NSString*)type NS_DESIGNATED_INITIALIZER;
 
 @end
 
+/**
+ *  @brief Convenience factory methods and initializers for common content types.
+ *
+ *  This category extends DZWebServerDataResponse with helpers for creating
+ *  responses from plain text, HTML strings, HTML template files, and JSON
+ *  objects. All text-based methods use UTF-8 encoding.
+ */
 @interface DZWebServerDataResponse (Extensions)
 
 /**
- *  Creates a data response from text encoded using UTF-8.
+ *  @brief Creates a data response from a plain-text string encoded as UTF-8.
+ *
+ *  The content type is set to @c "text/plain; charset=utf-8".
+ *
+ *  @param text The plain-text string to use as the response body.
+ *
+ *  @return A new data response, or @c nil if the string cannot be encoded as UTF-8.
+ *
+ *  @see -initWithText:
  */
 + (nullable instancetype)responseWithText:(NSString*)text;
 
 /**
- *  Creates a data response from HTML encoded using UTF-8.
+ *  @brief Creates a data response from an HTML string encoded as UTF-8.
+ *
+ *  The content type is set to @c "text/html; charset=utf-8".
+ *
+ *  @param html The HTML string to use as the response body.
+ *
+ *  @return A new data response, or @c nil if the string cannot be encoded as UTF-8.
+ *
+ *  @see -initWithHTML:
  */
 + (nullable instancetype)responseWithHTML:(NSString*)html;
 
 /**
- *  Creates a data response from an HTML template encoded using UTF-8.
- *  See -initWithHTMLTemplate:variables: for details.
+ *  @brief Creates a data response from an HTML template file with variable substitution.
+ *
+ *  @param path      The absolute file path to an HTML template file (UTF-8 encoded).
+ *  @param variables A dictionary mapping placeholder names to replacement values.
+ *                   All occurrences of @c \%variable\% in the template are replaced
+ *                   with the corresponding dictionary value.
+ *
+ *  @return A new data response, or @c nil if the template cannot be read or encoded.
+ *
+ *  @see -initWithHTMLTemplate:variables:
  */
 + (nullable instancetype)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary<NSString*, NSString*>*)variables;
 
 /**
- *  Creates a data response from a serialized JSON object and the default
- *  "application/json" content type.
+ *  @brief Creates a data response from a JSON-serializable object.
+ *
+ *  The content type is set to the default @c "application/json".
+ *
+ *  @param object A JSON-serializable object (e.g., @c NSDictionary, @c NSArray).
+ *               Must be valid for @c NSJSONSerialization.
+ *
+ *  @return A new data response, or @c nil if the object cannot be serialized to JSON.
+ *
+ *  @see -initWithJSONObject:
  */
 + (nullable instancetype)responseWithJSONObject:(id)object;
 
 /**
- *  Creates a data response from a serialized JSON object and a custom
- *  content type.
+ *  @brief Creates a data response from a JSON-serializable object with a custom content type.
+ *
+ *  @param object A JSON-serializable object (e.g., @c NSDictionary, @c NSArray).
+ *               Must be valid for @c NSJSONSerialization.
+ *  @param type   The MIME content type to use instead of the default @c "application/json"
+ *               (e.g., @c "application/vnd.api+json" ).
+ *
+ *  @return A new data response, or @c nil if the object cannot be serialized to JSON.
+ *
+ *  @see -initWithJSONObject:contentType:
  */
 + (nullable instancetype)responseWithJSONObject:(id)object contentType:(NSString*)type;
 
 /**
- *  Initializes a data response from text encoded using UTF-8.
+ *  @brief Initializes a data response from a plain-text string encoded as UTF-8.
+ *
+ *  The content type is set to @c "text/plain; charset=utf-8".
+ *
+ *  @param text The plain-text string to use as the response body.
+ *
+ *  @return An initialized data response, or @c nil if the string cannot be encoded as UTF-8.
  */
 - (nullable instancetype)initWithText:(NSString*)text;
 
 /**
- *  Initializes a data response from HTML encoded using UTF-8.
+ *  @brief Initializes a data response from an HTML string encoded as UTF-8.
+ *
+ *  The content type is set to @c "text/html; charset=utf-8".
+ *
+ *  @param html The HTML string to use as the response body.
+ *
+ *  @return An initialized data response, or @c nil if the string cannot be encoded as UTF-8.
  */
 - (nullable instancetype)initWithHTML:(NSString*)html;
 
 /**
- *  Initializes a data response from an HTML template encoded using UTF-8.
+ *  @brief Initializes a data response from an HTML template file with variable substitution.
  *
- *  All occurences of "%variable%" within the HTML template are replaced with
- *  their corresponding values.
+ *  The template file is read from disk using UTF-8 encoding. All occurrences of
+ *  @c \%variable\% in the template content are replaced with the corresponding
+ *  value from the @a variables dictionary. For example, a template containing
+ *  @c \%title\% with a dictionary of @c \@{"title":@"Hello"} would produce
+ *  HTML with @c "Hello" substituted in place of each @c \%title\% token.
+ *
+ *  The content type is set to @c "text/html; charset=utf-8".
+ *
+ *  @param path      The absolute file path to an HTML template file (UTF-8 encoded).
+ *  @param variables A dictionary mapping placeholder names to replacement values.
+ *
+ *  @return An initialized data response, or @c nil if the template cannot be read or encoded.
  */
 - (nullable instancetype)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary<NSString*, NSString*>*)variables;
 
 /**
- *  Initializes a data response from a serialized JSON object and the default
- *  "application/json" content type.
+ *  @brief Initializes a data response from a JSON-serializable object.
+ *
+ *  The object is serialized using @c NSJSONSerialization and the content type
+ *  is set to the default @c "application/json".
+ *
+ *  @param object A JSON-serializable object (e.g., @c NSDictionary, @c NSArray).
+ *               Must be valid for @c NSJSONSerialization.
+ *
+ *  @return An initialized data response, or @c nil if the object cannot be serialized to JSON.
+ *
+ *  @see -initWithJSONObject:contentType:
  */
 - (nullable instancetype)initWithJSONObject:(id)object;
 
 /**
- *  Initializes a data response from a serialized JSON object and a custom
- *  content type.
+ *  @brief Initializes a data response from a JSON-serializable object with a custom content type.
+ *
+ *  The object is serialized using @c NSJSONSerialization. Use this method when
+ *  you need a non-standard JSON content type such as @c "application/vnd.api+json".
+ *
+ *  @param object A JSON-serializable object (e.g., @c NSDictionary, @c NSArray).
+ *               Must be valid for @c NSJSONSerialization.
+ *  @param type   The MIME content type for the response.
+ *
+ *  @return An initialized data response, or @c nil if the object cannot be serialized to JSON.
  */
 - (nullable instancetype)initWithJSONObject:(id)object contentType:(NSString*)type;
 
