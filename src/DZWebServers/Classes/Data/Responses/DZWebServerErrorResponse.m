@@ -34,7 +34,7 @@
 @implementation DZWebServerErrorResponse
 
 + (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
-  GWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
+  DWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
   DZWebServerErrorResponse* response = [(DZWebServerErrorResponse*)[self alloc] initWithStatusCode:errorCode underlyingError:nil messageFormat:format arguments:arguments];
@@ -43,7 +43,7 @@
 }
 
 + (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
-  GWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
+  DWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
   DZWebServerErrorResponse* response = [(DZWebServerErrorResponse*)[self alloc] initWithStatusCode:errorCode underlyingError:nil messageFormat:format arguments:arguments];
@@ -52,7 +52,7 @@
 }
 
 + (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
-  GWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
+  DWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
   DZWebServerErrorResponse* response = [(DZWebServerErrorResponse*)[self alloc] initWithStatusCode:errorCode underlyingError:underlyingError messageFormat:format arguments:arguments];
@@ -61,7 +61,7 @@
 }
 
 + (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
-  GWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
+  DWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
   DZWebServerErrorResponse* response = [(DZWebServerErrorResponse*)[self alloc] initWithStatusCode:errorCode underlyingError:underlyingError messageFormat:format arguments:arguments];
@@ -86,7 +86,7 @@ static inline NSString* _EscapeHTMLString(NSString* string) {
 }
 
 - (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
-  GWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
+  DWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
   self = [self initWithStatusCode:errorCode underlyingError:nil messageFormat:format arguments:arguments];
@@ -95,7 +95,7 @@ static inline NSString* _EscapeHTMLString(NSString* string) {
 }
 
 - (instancetype)initWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
-  GWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
+  DWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
   self = [self initWithStatusCode:errorCode underlyingError:nil messageFormat:format arguments:arguments];
@@ -104,7 +104,7 @@ static inline NSString* _EscapeHTMLString(NSString* string) {
 }
 
 - (instancetype)initWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
-  GWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
+  DWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
   self = [self initWithStatusCode:errorCode underlyingError:underlyingError messageFormat:format arguments:arguments];
@@ -113,7 +113,7 @@ static inline NSString* _EscapeHTMLString(NSString* string) {
 }
 
 - (instancetype)initWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
-  GWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
+  DWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
   self = [self initWithStatusCode:errorCode underlyingError:underlyingError messageFormat:format arguments:arguments];

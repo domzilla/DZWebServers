@@ -36,6 +36,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface DZWebServerDataResponse : DZWebServerResponse
 @property(nonatomic, copy) NSString* contentType;  // Redeclare as non-null
 
+- (instancetype)init NS_UNAVAILABLE;
+
 /**
  *  Creates a response with data in memory and a given content type.
  */
@@ -44,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  *  This method is the designated initializer for the class.
  */
-- (instancetype)initWithData:(NSData*)data contentType:(NSString*)type;
+- (instancetype)initWithData:(NSData*)data contentType:(NSString*)type NS_DESIGNATED_INITIALIZER;
 
 @end
 

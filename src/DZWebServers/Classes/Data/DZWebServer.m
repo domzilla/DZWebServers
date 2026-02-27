@@ -194,10 +194,10 @@ static void _ExecuteMainThreadRunLoopSources(void) {
 }
 
 - (void)dealloc {
-  GWS_DCHECK(_connected == NO);
-  GWS_DCHECK(_activeConnections == 0);
-  GWS_DCHECK(_options == nil);  // The server can never be dealloc'ed while running because of the retain-cycle with the dispatch source
-  GWS_DCHECK(_disconnectTimer == NULL);  // The server can never be dealloc'ed while the disconnect timer is pending because of the retain-cycle
+  DWS_DCHECK(_connected == NO);
+  DWS_DCHECK(_activeConnections == 0);
+  DWS_DCHECK(_options == nil);  // The server can never be dealloc'ed while running because of the retain-cycle with the dispatch source
+  DWS_DCHECK(_disconnectTimer == NULL);  // The server can never be dealloc'ed while the disconnect timer is pending because of the retain-cycle
 
 #if !OS_OBJECT_USE_OBJC_RETAIN_RELEASE
   dispatch_release(_sourceGroup);
@@ -209,15 +209,15 @@ static void _ExecuteMainThreadRunLoopSources(void) {
 
 // Always called on main thread
 - (void)_startBackgroundTask {
-  GWS_DCHECK([NSThread isMainThread]);
+  DWS_DCHECK([NSThread isMainThread]);
   if (_backgroundTask == UIBackgroundTaskInvalid) {
-    GWS_LOG_DEBUG(@"Did start background task");
+    DWS_LOG_DEBUG(@"Did start background task");
     _backgroundTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
-      GWS_LOG_WARNING(@"Application is being suspended while %@ is still connected", [self class]);
+      DWS_LOG_WARNING(@"Application is being suspended while %@ is still connected", [self class]);
       [self _endBackgroundTask];
     }];
   } else {
-    GWS_DNOT_REACHED();
+    DWS_DNOT_REACHED();
   }
 }
 
@@ -225,10 +225,10 @@ static void _ExecuteMainThreadRunLoopSources(void) {
 
 // Always called on main thread
 - (void)_didConnect {
-  GWS_DCHECK([NSThread isMainThread]);
-  GWS_DCHECK(_connected == NO);
+  DWS_DCHECK([NSThread isMainThread]);
+  DWS_DCHECK(_connected == NO);
   _connected = YES;
-  GWS_LOG_DEBUG(@"Did connect");
+  DWS_LOG_DEBUG(@"Did connect");
 
 #if TARGET_OS_IPHONE
   if ([[UIApplication sharedApplication] applicationState] != UIApplicationStateBackground) {
@@ -243,7 +243,7 @@ static void _ExecuteMainThreadRunLoopSources(void) {
 
 - (void)willStartConnection:(DZWebServerConnection*)connection {
   dispatch_sync(_syncQueue, ^{
-    GWS_DCHECK(self->_activeConnections >= 0);
+    DWS_DCHECK(self->_activeConnections >= 0);
     if (self->_activeConnections == 0) {
       dispatch_async(dispatch_get_main_queue(), ^{
         if (self->_disconnectTimer) {
@@ -264,14 +264,14 @@ static void _ExecuteMainThreadRunLoopSources(void) {
 
 // Always called on main thread
 - (void)_endBackgroundTask {
-  GWS_DCHECK([NSThread isMainThread]);
+  DWS_DCHECK([NSThread isMainThread]);
   if (_backgroundTask != UIBackgroundTaskInvalid) {
     if (_suspendInBackground && ([[UIApplication sharedApplication] applicationState] == UIApplicationStateBackground) && _source4) {
       [self _stop];
     }
     [[UIApplication sharedApplication] endBackgroundTask:_backgroundTask];
     _backgroundTask = UIBackgroundTaskInvalid;
-    GWS_LOG_DEBUG(@"Did end background task");
+    DWS_LOG_DEBUG(@"Did end background task");
   }
 }
 
@@ -279,10 +279,10 @@ static void _ExecuteMainThreadRunLoopSources(void) {
 
 // Always called on main thread
 - (void)_didDisconnect {
-  GWS_DCHECK([NSThread isMainThread]);
-  GWS_DCHECK(_connected == YES);
+  DWS_DCHECK([NSThread isMainThread]);
+  DWS_DCHECK(_connected == YES);
   _connected = NO;
-  GWS_LOG_DEBUG(@"Did disconnect");
+  DWS_LOG_DEBUG(@"Did disconnect");
 
 #if TARGET_OS_IPHONE
   [self _endBackgroundTask];
@@ -295,7 +295,7 @@ static void _ExecuteMainThreadRunLoopSources(void) {
 
 - (void)didEndConnection:(DZWebServerConnection*)connection {
   dispatch_sync(_syncQueue, ^{
-    GWS_DCHECK(self->_activeConnections > 0);
+    DWS_DCHECK(self->_activeConnections > 0);
     self->_activeConnections -= 1;
     if (self->_activeConnections == 0) {
       dispatch_async(dispatch_get_main_queue(), ^{
@@ -305,7 +305,7 @@ static void _ExecuteMainThreadRunLoopSources(void) {
             CFRelease(self->_disconnectTimer);
           }
           self->_disconnectTimer = CFRunLoopTimerCreateWithHandler(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + self->_disconnectDelay, 0.0, 0, 0, ^(CFRunLoopTimerRef timer) {
-            GWS_DCHECK([NSThread isMainThread]);
+            DWS_DCHECK([NSThread isMainThread]);
             [self _didDisconnect];
             CFRelease(self->_disconnectTimer);
             self->_disconnectTimer = NULL;
@@ -337,42 +337,42 @@ static void _ExecuteMainThreadRunLoopSources(void) {
 }
 
 - (void)addHandlerWithMatchBlock:(DZWebServerMatchBlock)matchBlock asyncProcessBlock:(DZWebServerAsyncProcessBlock)processBlock {
-  GWS_DCHECK(_options == nil);
+  DWS_DCHECK(_options == nil);
   DZWebServerHandler* handler = [[DZWebServerHandler alloc] initWithMatchBlock:matchBlock asyncProcessBlock:processBlock];
   [_handlers insertObject:handler atIndex:0];
 }
 
 - (void)removeAllHandlers {
-  GWS_DCHECK(_options == nil);
+  DWS_DCHECK(_options == nil);
   [_handlers removeAllObjects];
 }
 
 static void _NetServiceRegisterCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
-  GWS_DCHECK([NSThread isMainThread]);
+  DWS_DCHECK([NSThread isMainThread]);
   @autoreleasepool {
     if (error->error) {
-      GWS_LOG_ERROR(@"Bonjour registration error %i (domain %i)", (int)error->error, (int)error->domain);
+      DWS_LOG_ERROR(@"Bonjour registration error %i (domain %i)", (int)error->error, (int)error->domain);
     } else {
       DZWebServer* server = (__bridge DZWebServer*)info;
-      GWS_LOG_VERBOSE(@"Bonjour registration complete for %@", [server class]);
+      DWS_LOG_VERBOSE(@"Bonjour registration complete for %@", [server class]);
       if (!CFNetServiceResolveWithTimeout(server->_resolutionService, kBonjourResolutionTimeout, NULL)) {
-        GWS_LOG_ERROR(@"Failed starting Bonjour resolution");
-        GWS_DNOT_REACHED();
+        DWS_LOG_ERROR(@"Failed starting Bonjour resolution");
+        DWS_DNOT_REACHED();
       }
     }
   }
 }
 
 static void _NetServiceResolveCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
-  GWS_DCHECK([NSThread isMainThread]);
+  DWS_DCHECK([NSThread isMainThread]);
   @autoreleasepool {
     if (error->error) {
       if ((error->domain != kCFStreamErrorDomainNetServices) && (error->error != kCFNetServicesErrorTimeout)) {
-        GWS_LOG_ERROR(@"Bonjour resolution error %i (domain %i)", (int)error->error, (int)error->domain);
+        DWS_LOG_ERROR(@"Bonjour resolution error %i (domain %i)", (int)error->error, (int)error->domain);
       }
     } else {
       DZWebServer* server = (__bridge DZWebServer*)info;
-      GWS_LOG_INFO(@"%@ now locally reachable at %@", [server class], server.bonjourServerURL);
+      DWS_LOG_INFO(@"%@ now locally reachable at %@", [server class], server.bonjourServerURL);
       if ([server.delegate respondsToSelector:@selector(webServerDidCompleteBonjourRegistration:)]) {
         [server.delegate webServerDidCompleteBonjourRegistration:server];
       }
@@ -381,7 +381,7 @@ static void _NetServiceResolveCallBack(CFNetServiceRef service, CFStreamError* e
 }
 
 static void _DNSServiceCallBack(DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, uint32_t externalAddress, DNSServiceProtocol protocol, uint16_t internalPort, uint16_t externalPort, uint32_t ttl, void* context) {
-  GWS_DCHECK([NSThread isMainThread]);
+  DWS_DCHECK([NSThread isMainThread]);
   @autoreleasepool {
     DZWebServer* server = (__bridge DZWebServer*)context;
     if ((errorCode == kDNSServiceErr_NoError) || (errorCode == kDNSServiceErr_DoubleNAT)) {
@@ -392,9 +392,9 @@ static void _DNSServiceCallBack(DNSServiceRef sdRef, DNSServiceFlags flags, uint
       addr4.sin_addr.s_addr = externalAddress;  // Already in network byte order
       server->_dnsAddress = DZWebServerStringFromSockAddr((const struct sockaddr*)&addr4, NO);
       server->_dnsPort = ntohs(externalPort);
-      GWS_LOG_INFO(@"%@ now publicly reachable at %@", [server class], server.publicServerURL);
+      DWS_LOG_INFO(@"%@ now publicly reachable at %@", [server class], server.publicServerURL);
     } else {
-      GWS_LOG_ERROR(@"DNS service error %i", errorCode);
+      DWS_LOG_ERROR(@"DNS service error %i", errorCode);
       server->_dnsAddress = nil;
       server->_dnsPort = 0;
     }
@@ -405,12 +405,12 @@ static void _DNSServiceCallBack(DNSServiceRef sdRef, DNSServiceFlags flags, uint
 }
 
 static void _SocketCallBack(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void* data, void* info) {
-  GWS_DCHECK([NSThread isMainThread]);
+  DWS_DCHECK([NSThread isMainThread]);
   @autoreleasepool {
     DZWebServer* server = (__bridge DZWebServer*)info;
     DNSServiceErrorType status = DNSServiceProcessResult(server->_dnsService);
     if (status != kDNSServiceErr_NoError) {
-      GWS_LOG_ERROR(@"DNS service error %i", status);
+      DWS_LOG_ERROR(@"DNS service error %i", status);
     }
   }
 }
@@ -437,20 +437,20 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
     if (bind(listeningSocket, address, length) == 0) {
       if (listen(listeningSocket, (int)maxPendingConnections) == 0) {
-        GWS_LOG_DEBUG(@"Did open %s listening socket %i", useIPv6 ? "IPv6" : "IPv4", listeningSocket);
+        DWS_LOG_DEBUG(@"Did open %s listening socket %i", useIPv6 ? "IPv6" : "IPv4", listeningSocket);
         return listeningSocket;
       } else {
         if (error) {
           *error = DZWebServerMakePosixError(errno);
         }
-        GWS_LOG_ERROR(@"Failed starting %s listening socket: %s (%i)", useIPv6 ? "IPv6" : "IPv4", strerror(errno), errno);
+        DWS_LOG_ERROR(@"Failed starting %s listening socket: %s (%i)", useIPv6 ? "IPv6" : "IPv4", strerror(errno), errno);
         close(listeningSocket);
       }
     } else {
       if (error) {
         *error = DZWebServerMakePosixError(errno);
       }
-      GWS_LOG_ERROR(@"Failed binding %s listening socket: %s (%i)", useIPv6 ? "IPv6" : "IPv4", strerror(errno), errno);
+      DWS_LOG_ERROR(@"Failed binding %s listening socket: %s (%i)", useIPv6 ? "IPv6" : "IPv4", strerror(errno), errno);
       close(listeningSocket);
     }
 
@@ -458,7 +458,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
     if (error) {
       *error = DZWebServerMakePosixError(errno);
     }
-    GWS_LOG_ERROR(@"Failed creating %s listening socket: %s (%i)", useIPv6 ? "IPv6" : "IPv4", strerror(errno), errno);
+    DWS_LOG_ERROR(@"Failed creating %s listening socket: %s (%i)", useIPv6 ? "IPv6" : "IPv4", strerror(errno), errno);
   }
   return -1;
 }
@@ -470,9 +470,9 @@ static inline NSString* _EncodeBase64(NSString* string) {
     @autoreleasepool {
       int result = close(listeningSocket);
       if (result != 0) {
-        GWS_LOG_ERROR(@"Failed closing %s listening socket: %s (%i)", isIPv6 ? "IPv6" : "IPv4", strerror(errno), errno);
+        DWS_LOG_ERROR(@"Failed closing %s listening socket: %s (%i)", isIPv6 ? "IPv6" : "IPv4", strerror(errno), errno);
       } else {
-        GWS_LOG_DEBUG(@"Did close %s listening socket %i", isIPv6 ? "IPv6" : "IPv4", listeningSocket);
+        DWS_LOG_DEBUG(@"Did close %s listening socket %i", isIPv6 ? "IPv6" : "IPv4", listeningSocket);
       }
     }
     dispatch_group_leave(self->_sourceGroup);
@@ -490,9 +490,9 @@ static inline NSString* _EncodeBase64(NSString* string) {
         NSData* localAddress = nil;
         if (getsockname(socket, (struct sockaddr*)&localSockAddr, &localAddrLen) == 0) {
           localAddress = [NSData dataWithBytes:&localSockAddr length:localAddrLen];
-          GWS_DCHECK((!isIPv6 && localSockAddr.ss_family == AF_INET) || (isIPv6 && localSockAddr.ss_family == AF_INET6));
+          DWS_DCHECK((!isIPv6 && localSockAddr.ss_family == AF_INET) || (isIPv6 && localSockAddr.ss_family == AF_INET6));
         } else {
-          GWS_DNOT_REACHED();
+          DWS_DNOT_REACHED();
         }
 
         int noSigPipe = 1;
@@ -501,7 +501,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
         DZWebServerConnection* connection = [(DZWebServerConnection*)[self->_connectionClass alloc] initWithServer:self localAddress:localAddress remoteAddress:remoteAddress socket:socket];  // Connection will automatically retain itself while opened
         [connection self];  // Prevent compiler from complaining about unused variable / useless statement
       } else {
-        GWS_LOG_ERROR(@"Failed accepting %s socket: %s (%i)", isIPv6 ? "IPv6" : "IPv4", strerror(errno), errno);
+        DWS_LOG_ERROR(@"Failed accepting %s socket: %s (%i)", isIPv6 ? "IPv6" : "IPv4", strerror(errno), errno);
       }
     }
   });
@@ -509,7 +509,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 }
 
 - (BOOL)_start:(NSError**)error {
-  GWS_DCHECK(_source4 == NULL);
+  DWS_DCHECK(_source4 == NULL);
 
   NSUInteger port = [(NSNumber*)_GetOption(_options, DZWebServerOption_Port, @0) unsignedIntegerValue];
   BOOL bindToLocalhost = [(NSNumber*)_GetOption(_options, DZWebServerOption_BindToLocalhost, @NO) boolValue];
@@ -531,7 +531,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
     if (getsockname(listeningSocket4, (struct sockaddr*)&addr, &addrlen) == 0) {
       port = ntohs(addr.sin_port);
     } else {
-      GWS_LOG_ERROR(@"Failed retrieving socket address: %s (%i)", strerror(errno), errno);
+      DWS_LOG_ERROR(@"Failed retrieving socket address: %s (%i)", strerror(errno), errno);
     }
   }
 
@@ -602,7 +602,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
           CFDataRef txtData = CFNetServiceCreateTXTDataWithDictionary(nil, txtDictionary);
           Boolean setTXTDataResult = CFNetServiceSetTXTData(_registrationService, txtData);
           if (!setTXTDataResult) {
-            GWS_LOG_ERROR(@"Failed setting TXTData");
+            DWS_LOG_ERROR(@"Failed setting TXTData");
           }
         }
       }
@@ -614,10 +614,10 @@ static inline NSString* _EncodeBase64(NSString* string) {
         CFNetServiceSetClient(_resolutionService, _NetServiceResolveCallBack, &context);
         CFNetServiceScheduleWithRunLoop(_resolutionService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
       } else {
-        GWS_LOG_ERROR(@"Failed creating CFNetService for resolution");
+        DWS_LOG_ERROR(@"Failed creating CFNetService for resolution");
       }
     } else {
-      GWS_LOG_ERROR(@"Failed creating CFNetService for registration");
+      DWS_LOG_ERROR(@"Failed creating CFNetService for registration");
     }
   }
 
@@ -632,21 +632,21 @@ static inline NSString* _EncodeBase64(NSString* string) {
         if (_dnsSource) {
           CFRunLoopAddSource(CFRunLoopGetMain(), _dnsSource, kCFRunLoopCommonModes);
         } else {
-          GWS_LOG_ERROR(@"Failed creating CFRunLoopSource");
-          GWS_DNOT_REACHED();
+          DWS_LOG_ERROR(@"Failed creating CFRunLoopSource");
+          DWS_DNOT_REACHED();
         }
       } else {
-        GWS_LOG_ERROR(@"Failed creating CFSocket");
-        GWS_DNOT_REACHED();
+        DWS_LOG_ERROR(@"Failed creating CFSocket");
+        DWS_DNOT_REACHED();
       }
     } else {
-      GWS_LOG_ERROR(@"Failed creating NAT port mapping (%i)", status);
+      DWS_LOG_ERROR(@"Failed creating NAT port mapping (%i)", status);
     }
   }
 
   dispatch_resume(_source4);
   dispatch_resume(_source6);
-  GWS_LOG_INFO(@"%@ started on port %i and reachable at %@", [self class], (int)_port, self.serverURL);
+  DWS_LOG_INFO(@"%@ started on port %i and reachable at %@", [self class], (int)_port, self.serverURL);
   if ([_delegate respondsToSelector:@selector(webServerDidStart:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
       [self->_delegate webServerDidStart:self];
@@ -657,7 +657,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 }
 
 - (void)_stop {
-  GWS_DCHECK(_source4 != NULL);
+  DWS_DCHECK(_source4 != NULL);
 
   if (_dnsService) {
     _dnsAddress = nil;
@@ -718,7 +718,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
     }
   });
 
-  GWS_LOG_INFO(@"%@ stopped", [self class]);
+  DWS_LOG_INFO(@"%@ stopped", [self class]);
   if ([_delegate respondsToSelector:@selector(webServerDidStop:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
       [self->_delegate webServerDidStop:self];
@@ -729,16 +729,16 @@ static inline NSString* _EncodeBase64(NSString* string) {
 #if TARGET_OS_IPHONE
 
 - (void)_didEnterBackground:(NSNotification*)notification {
-  GWS_DCHECK([NSThread isMainThread]);
-  GWS_LOG_DEBUG(@"Did enter background");
+  DWS_DCHECK([NSThread isMainThread]);
+  DWS_LOG_DEBUG(@"Did enter background");
   if ((_backgroundTask == UIBackgroundTaskInvalid) && _source4) {
     [self _stop];
   }
 }
 
 - (void)_willEnterForeground:(NSNotification*)notification {
-  GWS_DCHECK([NSThread isMainThread]);
-  GWS_LOG_DEBUG(@"Will enter foreground");
+  DWS_DCHECK([NSThread isMainThread]);
+  DWS_LOG_DEBUG(@"Will enter foreground");
   if (!_source4) {
     [self _start:NULL];  // TODO: There's probably nothing we can do on failure
   }
@@ -767,7 +767,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 #endif
     return YES;
   } else {
-    GWS_DNOT_REACHED();
+    DWS_DNOT_REACHED();
   }
   return NO;
 }
@@ -789,7 +789,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
     }
     _options = nil;
   } else {
-    GWS_DNOT_REACHED();
+    DWS_DNOT_REACHED();
   }
 }
 
@@ -858,7 +858,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 }
 
 - (BOOL)runWithOptions:(NSDictionary<NSString*, id>*)options error:(NSError**)error {
-  GWS_DCHECK([NSThread isMainThread]);
+  DWS_DCHECK([NSThread isMainThread]);
   BOOL success = NO;
   _run = YES;
   void (*termHandler)(int) = signal(SIGTERM, _SignalHandler);
@@ -926,7 +926,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
         }
                asyncProcessBlock:block];
   } else {
-    GWS_DNOT_REACHED();
+    DWS_DNOT_REACHED();
   }
 }
 
@@ -972,7 +972,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
         }
                asyncProcessBlock:block];
   } else {
-    GWS_DNOT_REACHED();
+    DWS_DNOT_REACHED();
   }
 }
 
@@ -1020,12 +1020,12 @@ static inline NSString* _EncodeBase64(NSString* string) {
   for (NSString* entry in contents) {
     if (![entry hasPrefix:@"."]) {
       NSString* type = [[[NSFileManager defaultManager] attributesOfItemAtPath:[path stringByAppendingPathComponent:entry] error:NULL] objectForKey:NSFileType];
-      GWS_DCHECK(type);
+      DWS_DCHECK(type);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
       NSString* escapedFile = [entry stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 #pragma clang diagnostic pop
-      GWS_DCHECK(escapedFile);
+      DWS_DCHECK(escapedFile);
       if ([type isEqualToString:NSFileTypeRegular]) {
         [html appendFormat:@"<li><a href=\"%@\">%@</a></li>\n", escapedFile, entry];
       } else if ([type isEqualToString:NSFileTypeDirectory]) {
@@ -1082,7 +1082,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
           return response;
         }];
   } else {
-    GWS_DNOT_REACHED();
+    DWS_DNOT_REACHED();
   }
 }
 
@@ -1102,35 +1102,35 @@ static inline NSString* _EncodeBase64(NSString* string) {
 #if defined(__DZWEBSERVER_LOGGING_FACILITY_BUILTIN__)
   _builtInLoggerBlock = block;
 #else
-  GWS_DNOT_REACHED();  // Built-in logger must be enabled in order to override
+  DWS_DNOT_REACHED();  // Built-in logger must be enabled in order to override
 #endif
 }
 
 - (void)logVerbose:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  GWS_LOG_VERBOSE(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
+  DWS_LOG_VERBOSE(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
   va_end(arguments);
 }
 
 - (void)logInfo:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  GWS_LOG_INFO(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
+  DWS_LOG_INFO(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
   va_end(arguments);
 }
 
 - (void)logWarning:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  GWS_LOG_WARNING(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
+  DWS_LOG_WARNING(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
   va_end(arguments);
 }
 
 - (void)logError:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  GWS_LOG_ERROR(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
+  DWS_LOG_ERROR(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
   va_end(arguments);
 }
 
@@ -1188,7 +1188,7 @@ static CFHTTPMessageRef _CreateHTTPMessageFromPerformingRequest(NSData* inData, 
           outData.length = length;
           response = _CreateHTTPMessageFromData(outData, NO);
         } else {
-          GWS_DNOT_REACHED();
+          DWS_DNOT_REACHED();
         }
       }
     }
@@ -1206,7 +1206,7 @@ static void _LogResult(NSString* format, ...) {
 }
 
 - (NSInteger)runTestsWithOptions:(NSDictionary<NSString*, id>*)options inDirectory:(NSString*)path {
-  GWS_DCHECK([NSThread isMainThread]);
+  DWS_DCHECK([NSThread isMainThread]);
   NSArray* ignoredHeaders = @[ @"Date", @"Etag" ];  // Dates are always different by definition and ETags depend on file system node IDs
   NSInteger result = -1;
   if ([self startWithOptions:options error:NULL]) {
@@ -1297,7 +1297,7 @@ static void _LogResult(NSString* format, ...) {
                     CFRelease(expectedResponse);
                   }
                 } else {
-                  GWS_DNOT_REACHED();
+                  DWS_DNOT_REACHED();
                 }
                 break;
               }
@@ -1305,7 +1305,7 @@ static void _LogResult(NSString* format, ...) {
             CFRelease(request);
           }
         } else {
-          GWS_DNOT_REACHED();
+          DWS_DNOT_REACHED();
         }
         _LogResult(@"");
         if (!success) {

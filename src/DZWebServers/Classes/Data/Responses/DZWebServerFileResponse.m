@@ -79,12 +79,12 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
 - (instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment mimeTypeOverrides:(NSDictionary<NSString*, NSString*>*)overrides {
   struct stat info;
   if (lstat([path fileSystemRepresentation], &info) || !(info.st_mode & S_IFREG)) {
-    GWS_DNOT_REACHED();
+    DWS_DNOT_REACHED();
     return nil;
   }
 #ifndef __LP64__
   if (info.st_size >= (off_t)4294967295) {  // In 32 bit mode, we can't handle files greater than 4 GiBs (don't use "NSUIntegerMax" here to avoid potential unsigned to signed conversion issues)
-    GWS_DNOT_REACHED();
+    DWS_DNOT_REACHED();
     return nil;
   }
 #endif
@@ -114,7 +114,7 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
     if (hasByteRange) {
       [self setStatusCode:kDZWebServerHTTPStatusCode_PartialContent];
       [self setValue:[NSString stringWithFormat:@"bytes %lu-%lu/%lu", (unsigned long)_offset, (unsigned long)(_offset + _size - 1), (unsigned long)fileSize] forAdditionalHeader:@"Content-Range"];
-      GWS_LOG_DEBUG(@"Using content bytes range [%lu-%lu] for file \"%@\"", (unsigned long)_offset, (unsigned long)(_offset + _size - 1), path);
+      DWS_LOG_DEBUG(@"Using content bytes range [%lu-%lu] for file \"%@\"", (unsigned long)_offset, (unsigned long)(_offset + _size - 1), path);
     }
 
     if (attachment) {
@@ -125,7 +125,7 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
         NSString* value = [NSString stringWithFormat:@"attachment; filename=\"%@\"; filename*=UTF-8''%@", lossyFileName, DZWebServerEscapeURLString(fileName)];
         [self setValue:value forAdditionalHeader:@"Content-Disposition"];
       } else {
-        GWS_DNOT_REACHED();
+        DWS_DNOT_REACHED();
       }
     }
 

@@ -42,6 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic) NSDate* lastModifiedDate;  // Redeclare as non-null
 @property(nonatomic, copy) NSString* eTag;  // Redeclare as non-null
 
+- (instancetype)init NS_UNAVAILABLE;
+
 /**
  *  Creates a response with the contents of a file.
  */
@@ -101,7 +103,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  file extensions without the period, and the values must be the corresponding
  *  MIME types.
  */
-- (nullable instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment mimeTypeOverrides:(nullable NSDictionary<NSString*, NSString*>*)overrides;
+- (nullable instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment mimeTypeOverrides:(nullable NSDictionary<NSString*, NSString*>*)overrides NS_DESIGNATED_INITIALIZER;
 
 @end
 

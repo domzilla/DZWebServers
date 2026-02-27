@@ -80,7 +80,7 @@ typedef void (^DZWebServerBodyReaderCompletionBlock)(NSData* _Nullable data, NSE
  *  NSData if there is body data available, or an empty NSData there is no more
  *  body data, or nil on error and pass an NSError along.
  */
-- (void)asyncReadDataWithCompletion:(DZWebServerBodyReaderCompletionBlock)block;
+- (void)asyncReadDataWithCompletion:(DZWebServerBodyReaderCompletionBlock)block NS_SWIFT_DISABLE_ASYNC;
 
 @end
 
@@ -167,7 +167,7 @@ typedef void (^DZWebServerBodyReaderCompletionBlock)(NSData* _Nullable data, NSE
 /**
  *  This method is the designated initializer for the class.
  */
-- (instancetype)init;
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
 
 /**
  *  Sets an additional HTTP header on the response.

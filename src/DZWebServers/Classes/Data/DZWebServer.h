@@ -74,7 +74,7 @@ typedef void (^DZWebServerAsyncProcessBlock)(__kindof DZWebServerRequest* reques
  *  The block will be passed the log level and the log message, see setLogLevel for
  *  documentation of the log levels for the built-in logger.
  */
-typedef void (^DZWebServerBuiltInLoggerBlock)(int level, NSString* _Nonnull message);
+typedef void (^DZWebServerBuiltInLoggerBlock)(int level, NSString* message);
 
 /**
  *  The port used by the DZWebServer (NSNumber / NSUInteger).
@@ -331,7 +331,7 @@ extern NSString* const DZWebServerAuthenticationMethod_DigestAccess;
  *  @warning This property is only valid if the server is running and Bonjour
  *  registration has successfully completed, which can take up to a few seconds.
  */
-@property(nonatomic, readonly, nullable) NSString* bonjourName;
+@property(nonatomic, readonly, copy, nullable) NSString* bonjourName;
 
 /**
  *  Returns the Bonjour service type used by the server.
@@ -339,12 +339,12 @@ extern NSString* const DZWebServerAuthenticationMethod_DigestAccess;
  *  @warning This property is only valid if the server is running and Bonjour
  *  registration has successfully completed, which can take up to a few seconds.
  */
-@property(nonatomic, readonly, nullable) NSString* bonjourType;
+@property(nonatomic, readonly, copy, nullable) NSString* bonjourType;
 
 /**
  *  This method is the designated initializer for the class.
  */
-- (instancetype)init;
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
 
 /**
  *  Adds to the server a handler that generates responses synchronously when handling incoming HTTP requests.
@@ -556,13 +556,13 @@ extern NSString* const DZWebServerAuthenticationMethod_DigestAccess;
  *  settings to the name of a custom header file (escaped like \"MyLogging.h\").
  *  This header file must define the following set of macros:
  *
- *    GWS_LOG_DEBUG(...)
- *    GWS_LOG_VERBOSE(...)
- *    GWS_LOG_INFO(...)
- *    GWS_LOG_WARNING(...)
- *    GWS_LOG_ERROR(...)
+ *    DWS_LOG_DEBUG(...)
+ *    DWS_LOG_VERBOSE(...)
+ *    DWS_LOG_INFO(...)
+ *    DWS_LOG_WARNING(...)
+ *    DWS_LOG_ERROR(...)
  *
- *  IMPORTANT: These macros must behave like NSLog(). Furthermore the GWS_LOG_DEBUG()
+ *  IMPORTANT: These macros must behave like NSLog(). Furthermore the DWS_LOG_DEBUG()
  *  macro should not do anything unless the preprocessor constant "DEBUG" evaluates
  *  to non-zero.
  *
@@ -593,7 +593,7 @@ extern NSString* const DZWebServerAuthenticationMethod_DigestAccess;
  *  IMPORTANT: In order for this override to work, you should not be specifying
  *  a custom logger at compile time with "__DZWEBSERVER_LOGGING_HEADER__".
  */
-+ (void)setBuiltInLogger:(DZWebServerBuiltInLoggerBlock)block;
++ (void)setBuiltInLogger:(nullable DZWebServerBuiltInLoggerBlock)block;
 
 /**
  *  Logs a message to the logging facility at the VERBOSE level.

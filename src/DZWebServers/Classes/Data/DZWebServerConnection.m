@@ -98,17 +98,17 @@ NS_ASSUME_NONNULL_END
 + (void)initialize {
   if (_CRLFData == nil) {
     _CRLFData = [[NSData alloc] initWithBytes:"\r\n" length:2];
-    GWS_DCHECK(_CRLFData);
+    DWS_DCHECK(_CRLFData);
   }
   if (_CRLFCRLFData == nil) {
     _CRLFCRLFData = [[NSData alloc] initWithBytes:"\r\n\r\n" length:4];
-    GWS_DCHECK(_CRLFCRLFData);
+    DWS_DCHECK(_CRLFCRLFData);
   }
   if (_continueData == nil) {
     CFHTTPMessageRef message = CFHTTPMessageCreateResponse(kCFAllocatorDefault, 100, NULL, kCFHTTPVersion1_1);
     _continueData = CFBridgingRelease(CFHTTPMessageCopySerializedMessage(message));
     CFRelease(message);
-    GWS_DCHECK(_continueData);
+    DWS_DCHECK(_continueData);
   }
   if (_lastChunkData == nil) {
     _lastChunkData = [[NSData alloc] initWithBytes:"0\r\n\r\n" length:5];
@@ -134,7 +134,7 @@ NS_ASSUME_NONNULL_END
 }
 
 - (void)_startProcessingRequest {
-  GWS_DCHECK(_responseMessage == NULL);
+  DWS_DCHECK(_responseMessage == NULL);
 
   DZWebServerResponse* preflightResponse = [self preflightRequest:_request];
   if (preflightResponse) {
@@ -149,7 +149,7 @@ NS_ASSUME_NONNULL_END
 
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 - (void)_finishProcessingRequest:(DZWebServerResponse*)response {
-  GWS_DCHECK(_responseMessage == NULL);
+  DWS_DCHECK(_responseMessage == NULL);
   BOOL hasBody = NO;
 
   if (response) {
@@ -162,7 +162,7 @@ NS_ASSUME_NONNULL_END
     }
     NSError* error = nil;
     if (hasBody && ![response performOpen:&error]) {
-      GWS_LOG_ERROR(@"Failed opening response body for socket %i: %@", _socket, error);
+      DWS_LOG_ERROR(@"Failed opening response body for socket %i: %@", _socket, error);
     } else {
       _response = response;
     }
@@ -214,16 +214,16 @@ NS_ASSUME_NONNULL_END
 - (void)_readBodyWithLength:(NSUInteger)length initialData:(NSData*)initialData {
   NSError* error = nil;
   if (![_request performOpen:&error]) {
-    GWS_LOG_ERROR(@"Failed opening request body for socket %i: %@", _socket, error);
+    DWS_LOG_ERROR(@"Failed opening request body for socket %i: %@", _socket, error);
     [self abortRequest:_request withStatusCode:kDZWebServerHTTPStatusCode_InternalServerError];
     return;
   }
 
   if (initialData.length) {
     if (![_request performWriteData:initialData error:&error]) {
-      GWS_LOG_ERROR(@"Failed writing request body on socket %i: %@", _socket, error);
+      DWS_LOG_ERROR(@"Failed writing request body on socket %i: %@", _socket, error);
       if (![_request performClose:&error]) {
-        GWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
+        DWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
       }
       [self abortRequest:_request withStatusCode:kDZWebServerHTTPStatusCode_InternalServerError];
       return;
@@ -238,7 +238,7 @@ NS_ASSUME_NONNULL_END
                         if ([self->_request performClose:&localError]) {
                           [self _startProcessingRequest];
                         } else {
-                          GWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", self->_socket, error);
+                          DWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", self->_socket, error);
                           [self abortRequest:self->_request withStatusCode:kDZWebServerHTTPStatusCode_InternalServerError];
                         }
                       }];
@@ -246,7 +246,7 @@ NS_ASSUME_NONNULL_END
     if ([_request performClose:&error]) {
       [self _startProcessingRequest];
     } else {
-      GWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
+      DWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
       [self abortRequest:_request withStatusCode:kDZWebServerHTTPStatusCode_InternalServerError];
     }
   }
@@ -255,7 +255,7 @@ NS_ASSUME_NONNULL_END
 - (void)_readChunkedBodyWithInitialData:(NSData*)initialData {
   NSError* error = nil;
   if (![_request performOpen:&error]) {
-    GWS_LOG_ERROR(@"Failed opening request body for socket %i: %@", _socket, error);
+    DWS_LOG_ERROR(@"Failed opening request body for socket %i: %@", _socket, error);
     [self abortRequest:_request withStatusCode:kDZWebServerHTTPStatusCode_InternalServerError];
     return;
   }
@@ -267,7 +267,7 @@ NS_ASSUME_NONNULL_END
             if ([self->_request performClose:&localError]) {
               [self _startProcessingRequest];
             } else {
-              GWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", self->_socket, error);
+              DWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", self->_socket, error);
               [self abortRequest:self->_request withStatusCode:kDZWebServerHTTPStatusCode_InternalServerError];
             }
           }];
@@ -288,7 +288,7 @@ NS_ASSUME_NONNULL_END
           NSURL* requestURL = CFBridgingRelease(CFHTTPMessageCopyRequestURL(self->_requestMessage));
           if (requestURL) {
             requestURL = [self rewriteRequestURL:requestURL withMethod:requestMethod headers:requestHeaders];
-            GWS_DCHECK(requestURL);
+            DWS_DCHECK(requestURL);
           }
           NSString* urlPath = requestURL ? CFBridgingRelease(CFURLCopyPath((CFURLRef)requestURL)) : nil;  // Don't use -[NSURL path] which strips the ending slash
           if (urlPath == nil) {
@@ -324,7 +324,7 @@ NS_ASSUME_NONNULL_END
                             }
                           }];
                     } else {
-                      GWS_LOG_ERROR(@"Unsupported 'Expect' / 'Content-Length' header combination on socket %i", self->_socket);
+                      DWS_LOG_ERROR(@"Unsupported 'Expect' / 'Content-Length' header combination on socket %i", self->_socket);
                       [self abortRequest:self->_request withStatusCode:kDZWebServerHTTPStatusCode_ExpectationFailed];
                     }
                   } else {
@@ -335,7 +335,7 @@ NS_ASSUME_NONNULL_END
                     }
                   }
                 } else {
-                  GWS_LOG_ERROR(@"Unexpected 'Content-Length' header value on socket %i", self->_socket);
+                  DWS_LOG_ERROR(@"Unexpected 'Content-Length' header value on socket %i", self->_socket);
                   [self abortRequest:self->_request withStatusCode:kDZWebServerHTTPStatusCode_BadRequest];
                 }
               } else {
@@ -343,12 +343,12 @@ NS_ASSUME_NONNULL_END
               }
             } else {
               self->_request = [[DZWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:requestPath query:requestQuery];
-              GWS_DCHECK(self->_request);
+              DWS_DCHECK(self->_request);
               [self abortRequest:self->_request withStatusCode:kDZWebServerHTTPStatusCode_NotImplemented];
             }
           } else {
             [self abortRequest:nil withStatusCode:kDZWebServerHTTPStatusCode_InternalServerError];
-            GWS_DNOT_REACHED();
+            DWS_DNOT_REACHED();
           }
         } else {
           [self abortRequest:nil withStatusCode:kDZWebServerHTTPStatusCode_InternalServerError];
@@ -362,7 +362,7 @@ NS_ASSUME_NONNULL_END
     _localAddressData = localAddress;
     _remoteAddressData = remoteAddress;
     _socket = socket;
-    GWS_LOG_DEBUG(@"Did open connection on socket %i", _socket);
+    DWS_LOG_DEBUG(@"Did open connection on socket %i", _socket);
 
     [_server willStartConnection:self];
 
@@ -388,9 +388,9 @@ NS_ASSUME_NONNULL_END
 - (void)dealloc {
   int result = close(_socket);
   if (result != 0) {
-    GWS_LOG_ERROR(@"Failed closing socket %i for connection: %s (%i)", _socket, strerror(errno), errno);
+    DWS_LOG_ERROR(@"Failed closing socket %i for connection: %s (%i)", _socket, strerror(errno), errno);
   } else {
-    GWS_LOG_DEBUG(@"Did close connection on socket %i", _socket);
+    DWS_LOG_DEBUG(@"Did close connection on socket %i", _socket);
   }
 
   if (_opened) {
@@ -427,14 +427,14 @@ NS_ASSUME_NONNULL_END
           block(YES);
         } else {
           if (self->_totalBytesRead > 0) {
-            GWS_LOG_ERROR(@"No more data available on socket %i", self->_socket);
+            DWS_LOG_ERROR(@"No more data available on socket %i", self->_socket);
           } else {
-            GWS_LOG_WARNING(@"No data received from socket %i", self->_socket);
+            DWS_LOG_WARNING(@"No data received from socket %i", self->_socket);
           }
           block(NO);
         }
       } else {
-        GWS_LOG_ERROR(@"Error while reading from socket %i: %s (%i)", self->_socket, strerror(error), error);
+        DWS_LOG_ERROR(@"Error while reading from socket %i: %s (%i)", self->_socket, strerror(error), error);
         block(NO);
       }
     }
@@ -442,7 +442,7 @@ NS_ASSUME_NONNULL_END
 }
 
 - (void)readHeaders:(NSMutableData*)headersData withCompletionBlock:(ReadHeadersCompletionBlock)block {
-  GWS_DCHECK(_requestMessage);
+  DWS_DCHECK(_requestMessage);
   [self readData:headersData
            withLength:NSUIntegerMax
       completionBlock:^(BOOL success) {
@@ -456,11 +456,11 @@ NS_ASSUME_NONNULL_END
               if (CFHTTPMessageIsHeaderComplete(self->_requestMessage)) {
                 block([headersData subdataWithRange:NSMakeRange(length, headersData.length - length)]);
               } else {
-                GWS_LOG_ERROR(@"Failed parsing request headers from socket %i", self->_socket);
+                DWS_LOG_ERROR(@"Failed parsing request headers from socket %i", self->_socket);
                 block(nil);
               }
             } else {
-              GWS_LOG_ERROR(@"Failed appending request headers data from socket %i", self->_socket);
+              DWS_LOG_ERROR(@"Failed appending request headers data from socket %i", self->_socket);
               block(nil);
             }
           }
@@ -471,7 +471,7 @@ NS_ASSUME_NONNULL_END
 }
 
 - (void)readBodyWithRemainingLength:(NSUInteger)length completionBlock:(ReadBodyCompletionBlock)block {
-  GWS_DCHECK([_request hasBody] && ![_request usesChunkedTransferEncoding]);
+  DWS_DCHECK([_request hasBody] && ![_request usesChunkedTransferEncoding]);
   NSMutableData* bodyData = [[NSMutableData alloc] initWithCapacity:kBodyReadCapacity];
   [self readData:bodyData
            withLength:length
@@ -487,13 +487,13 @@ NS_ASSUME_NONNULL_END
                 block(YES);
               }
             } else {
-              GWS_LOG_ERROR(@"Failed writing request body on socket %i: %@", self->_socket, error);
+              DWS_LOG_ERROR(@"Failed writing request body on socket %i: %@", self->_socket, error);
               block(NO);
             }
           } else {
-            GWS_LOG_ERROR(@"Unexpected extra content reading request body on socket %i", self->_socket);
+            DWS_LOG_ERROR(@"Unexpected extra content reading request body on socket %i", self->_socket);
             block(NO);
-            GWS_DNOT_REACHED();
+            DWS_DNOT_REACHED();
           }
         } else {
           block(NO);
@@ -511,7 +511,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 }
 
 - (void)readNextBodyChunk:(NSMutableData*)chunkData completionBlock:(ReadBodyCompletionBlock)block {
-  GWS_DCHECK([_request hasBody] && [_request usesChunkedTransferEncoding]);
+  DWS_DCHECK([_request hasBody] && [_request usesChunkedTransferEncoding]);
 
   while (1) {
     NSRange range = [chunkData rangeOfData:_CRLFData options:0 range:NSMakeRange(0, chunkData.length)];
@@ -531,12 +531,12 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
           if ([_request performWriteData:[chunkData subdataWithRange:NSMakeRange(range.location + range.length, length)] error:&error]) {
             [chunkData replaceBytesInRange:NSMakeRange(0, range.location + range.length + length + 2) withBytes:NULL length:0];
           } else {
-            GWS_LOG_ERROR(@"Failed writing request body on socket %i: %@", _socket, error);
+            DWS_LOG_ERROR(@"Failed writing request body on socket %i: %@", _socket, error);
             block(NO);
             return;
           }
         } else {
-          GWS_LOG_ERROR(@"Missing terminating CRLF sequence for chunk reading request body on socket %i", _socket);
+          DWS_LOG_ERROR(@"Missing terminating CRLF sequence for chunk reading request body on socket %i", _socket);
           block(NO);
           return;
         }
@@ -548,7 +548,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         }
       }
     } else {
-      GWS_LOG_ERROR(@"Invalid chunk length reading request body on socket %i", _socket);
+      DWS_LOG_ERROR(@"Invalid chunk length reading request body on socket %i", _socket);
       block(NO);
       return;
     }
@@ -576,11 +576,11 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   dispatch_write(_socket, buffer, dispatch_get_global_queue(_server.dispatchQueuePriority, 0), ^(dispatch_data_t remainingData, int error) {
     @autoreleasepool {
       if (error == 0) {
-        GWS_DCHECK(remainingData == NULL);
+        DWS_DCHECK(remainingData == NULL);
         [self didWriteBytes:data.bytes length:data.length];
         block(YES);
       } else {
-        GWS_LOG_ERROR(@"Error while writing to socket %i: %s (%i)", self->_socket, strerror(error), error);
+        DWS_LOG_ERROR(@"Error while writing to socket %i: %s (%i)", self->_socket, strerror(error), error);
         block(NO);
       }
     }
@@ -591,14 +591,14 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 }
 
 - (void)writeHeadersWithCompletionBlock:(WriteHeadersCompletionBlock)block {
-  GWS_DCHECK(_responseMessage);
+  DWS_DCHECK(_responseMessage);
   CFDataRef data = CFHTTPMessageCopySerializedMessage(_responseMessage);
   [self writeData:(__bridge NSData*)data withCompletionBlock:block];
   CFRelease(data);
 }
 
 - (void)writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block {
-  GWS_DCHECK([_response hasBody]);
+  DWS_DCHECK([_response hasBody]);
   [_response performReadDataWithCompletion:^(NSData* data, NSError* error) {
     if (data) {
       if (data.length) {
@@ -607,7 +607,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
           size_t hexLength = strlen(hexString);
           NSData* chunk = [NSMutableData dataWithLength:(hexLength + 2 + data.length + 2)];
           if (chunk == nil) {
-            GWS_LOG_ERROR(@"Failed allocating memory for response body chunk for socket %i: %@", self->_socket, error);
+            DWS_LOG_ERROR(@"Failed allocating memory for response body chunk for socket %i: %@", self->_socket, error);
             block(NO);
             return;
           }
@@ -641,7 +641,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         }
       }
     } else {
-      GWS_LOG_ERROR(@"Failed reading response body for socket %i: %@", self->_socket, error);
+      DWS_LOG_ERROR(@"Failed reading response body for socket %i: %@", self->_socket, error);
       block(NO);
     }
   }];
@@ -661,11 +661,11 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
     _requestPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
     _requestFD = open([_requestPath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    GWS_DCHECK(_requestFD > 0);
+    DWS_DCHECK(_requestFD > 0);
 
     _responsePath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
     _responseFD = open([_responsePath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    GWS_DCHECK(_responseFD > 0);
+    DWS_DCHECK(_responseFD > 0);
   }
 #endif
 
@@ -673,12 +673,12 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 }
 
 - (void)didReadBytes:(const void*)bytes length:(NSUInteger)length {
-  GWS_LOG_DEBUG(@"Connection received %lu bytes on socket %i", (unsigned long)length, _socket);
+  DWS_LOG_DEBUG(@"Connection received %lu bytes on socket %i", (unsigned long)length, _socket);
   _totalBytesRead += length;
 
 #ifdef __DZWEBSERVER_ENABLE_TESTING__
   if ((_requestFD > 0) && (write(_requestFD, bytes, length) != (ssize_t)length)) {
-    GWS_LOG_ERROR(@"Failed recording request data: %s (%i)", strerror(errno), errno);
+    DWS_LOG_ERROR(@"Failed recording request data: %s (%i)", strerror(errno), errno);
     close(_requestFD);
     _requestFD = 0;
   }
@@ -686,12 +686,12 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 }
 
 - (void)didWriteBytes:(const void*)bytes length:(NSUInteger)length {
-  GWS_LOG_DEBUG(@"Connection sent %lu bytes on socket %i", (unsigned long)length, _socket);
+  DWS_LOG_DEBUG(@"Connection sent %lu bytes on socket %i", (unsigned long)length, _socket);
   _totalBytesWritten += length;
 
 #ifdef __DZWEBSERVER_ENABLE_TESTING__
   if ((_responseFD > 0) && (write(_responseFD, bytes, length) != (ssize_t)length)) {
-    GWS_LOG_ERROR(@"Failed recording response data: %s (%i)", strerror(errno), errno);
+    DWS_LOG_ERROR(@"Failed recording response data: %s (%i)", strerror(errno), errno);
     close(_responseFD);
     _responseFD = 0;
   }
@@ -704,7 +704,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 // https://tools.ietf.org/html/rfc2617
 - (DZWebServerResponse*)preflightRequest:(DZWebServerRequest*)request {
-  GWS_LOG_DEBUG(@"Connection on socket %i preflighting request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_totalBytesRead);
+  DWS_LOG_DEBUG(@"Connection on socket %i preflighting request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_totalBytesRead);
   DZWebServerResponse* response = nil;
   if (_server.authenticationBasicAccounts) {
     __block BOOL authenticated = NO;
@@ -754,7 +754,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 }
 
 - (void)processRequest:(DZWebServerRequest*)request completion:(DZWebServerCompletionBlock)completion {
-  GWS_LOG_DEBUG(@"Connection on socket %i processing request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_totalBytesRead);
+  DWS_LOG_DEBUG(@"Connection on socket %i processing request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_totalBytesRead);
   _handler.asyncProcessBlock(request, [completion copy]);
 }
 
@@ -784,20 +784,20 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
     newResponse.cacheControlMaxAge = response.cacheControlMaxAge;
     newResponse.lastModifiedDate = response.lastModifiedDate;
     newResponse.eTag = response.eTag;
-    GWS_DCHECK(newResponse);
+    DWS_DCHECK(newResponse);
     return newResponse;
   }
   return response;
 }
 
 - (void)abortRequest:(DZWebServerRequest*)request withStatusCode:(NSInteger)statusCode {
-  GWS_DCHECK(_responseMessage == NULL);
-  GWS_DCHECK((statusCode >= 400) && (statusCode < 600));
+  DWS_DCHECK(_responseMessage == NULL);
+  DWS_DCHECK((statusCode >= 400) && (statusCode < 600));
   [self _initializeResponseHeadersWithStatusCode:statusCode];
   [self writeHeadersWithCompletionBlock:^(BOOL success){
       // Nothing more to do
   }];
-  GWS_LOG_DEBUG(@"Connection aborted with status code %i on socket %i", (int)statusCode, _socket);
+  DWS_LOG_DEBUG(@"Connection aborted with status code %i on socket %i", (int)statusCode, _socket);
 }
 
 - (void)close {
@@ -811,8 +811,8 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
       success = [[NSFileManager defaultManager] moveItemAtPath:_requestPath toPath:[[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:name] error:&error];
     }
     if (!success) {
-      GWS_LOG_ERROR(@"Failed saving recorded request: %@", error);
-      GWS_DNOT_REACHED();
+      DWS_LOG_ERROR(@"Failed saving recorded request: %@", error);
+      DWS_DNOT_REACHED();
     }
     unlink([_requestPath fileSystemRepresentation]);
   }
@@ -826,17 +826,17 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
       success = [[NSFileManager defaultManager] moveItemAtPath:_responsePath toPath:[[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:name] error:&error];
     }
     if (!success) {
-      GWS_LOG_ERROR(@"Failed saving recorded response: %@", error);
-      GWS_DNOT_REACHED();
+      DWS_LOG_ERROR(@"Failed saving recorded response: %@", error);
+      DWS_DNOT_REACHED();
     }
     unlink([_responsePath fileSystemRepresentation]);
   }
 #endif
 
   if (_request) {
-    GWS_LOG_VERBOSE(@"[%@] %@ %i \"%@ %@\" (%lu | %lu)", self.localAddressString, self.remoteAddressString, (int)_statusCode, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_totalBytesRead, (unsigned long)_totalBytesWritten);
+    DWS_LOG_VERBOSE(@"[%@] %@ %i \"%@ %@\" (%lu | %lu)", self.localAddressString, self.remoteAddressString, (int)_statusCode, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_totalBytesRead, (unsigned long)_totalBytesWritten);
   } else {
-    GWS_LOG_VERBOSE(@"[%@] %@ %i \"(invalid request)\" (%lu | %lu)", self.localAddressString, self.remoteAddressString, (int)_statusCode, (unsigned long)_totalBytesRead, (unsigned long)_totalBytesWritten);
+    DWS_LOG_VERBOSE(@"[%@] %@ %i \"(invalid request)\" (%lu | %lu)", self.localAddressString, self.remoteAddressString, (int)_statusCode, (unsigned long)_totalBytesRead, (unsigned long)_totalBytesWritten);
   }
 }
 

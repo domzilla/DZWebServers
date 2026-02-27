@@ -38,18 +38,18 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  *  Returns the control name retrieved from the part headers.
  */
-@property(nonatomic, readonly) NSString* controlName;
+@property(nonatomic, copy, readonly) NSString* controlName;
 
 /**
  *  Returns the content type retrieved from the part headers or "text/plain"
  *  if not available (per HTTP specifications).
  */
-@property(nonatomic, readonly) NSString* contentType;
+@property(nonatomic, copy, readonly) NSString* contentType;
 
 /**
  *  Returns the MIME type component of the content type for the part.
  */
-@property(nonatomic, readonly) NSString* mimeType;
+@property(nonatomic, copy, readonly) NSString* mimeType;
 
 @end
 
@@ -62,7 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  *  Returns the data for the part.
  */
-@property(nonatomic, readonly) NSData* data;
+@property(nonatomic, copy, readonly) NSData* data;
 
 /**
  *  Returns the data for the part interpreted as text. If the content
@@ -71,7 +71,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  The text encoding used to interpret the data is extracted from the
  *  "Content-Type" header or defaults to UTF-8.
  */
-@property(nonatomic, readonly, nullable) NSString* string;
+@property(nonatomic, copy, readonly, nullable) NSString* string;
 
 @end
 
@@ -84,7 +84,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  *  Returns the file name retrieved from the part headers.
  */
-@property(nonatomic, readonly) NSString* fileName;
+@property(nonatomic, copy, readonly) NSString* fileName;
 
 /**
  *  Returns the path to the temporary file containing the part data.
@@ -93,7 +93,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  DZWebServerMultiPartFile is deallocated. If you want to preserve this file,
  *  you must move it to a different location beforehand.
  */
-@property(nonatomic, readonly) NSString* temporaryPath;
+@property(nonatomic, copy, readonly) NSString* temporaryPath;
 
 @end
 
@@ -107,13 +107,13 @@ NS_ASSUME_NONNULL_BEGIN
  *  Returns the argument parts from the multipart encoded form as
  *  name / DZWebServerMultiPartArgument pairs.
  */
-@property(nonatomic, readonly) NSArray<DZWebServerMultiPartArgument*>* arguments;
+@property(nonatomic, copy, readonly) NSArray<DZWebServerMultiPartArgument*>* arguments;
 
 /**
  *  Returns the files parts from the multipart encoded form as
  *  name / DZWebServerMultiPartFile pairs.
  */
-@property(nonatomic, readonly) NSArray<DZWebServerMultiPartFile*>* files;
+@property(nonatomic, copy, readonly) NSArray<DZWebServerMultiPartFile*>* files;
 
 /**
  *  Returns the MIME type for multipart encoded forms

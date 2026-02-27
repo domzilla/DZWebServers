@@ -81,7 +81,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  *  Returns the upload directory as specified when the uploader was initialized.
  */
-@property(nonatomic, readonly) NSString* uploadDirectory;
+@property(nonatomic, readonly, copy) NSString* uploadDirectory;
 
 /**
  *  Sets the delegate for the uploader.
@@ -93,7 +93,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  *  The default value is nil i.e. all file extensions are allowed.
  */
-@property(nonatomic, copy) NSArray<NSString*>* allowedFileExtensions;
+@property(nonatomic, copy, nullable) NSArray<NSString*>* allowedFileExtensions;
 
 /**
  *  Sets if files and directories whose name start with a period are allowed to
@@ -141,7 +141,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  @warning The string value for this property must be raw HTML
  *  e.g. "<p>Some text</p>"
  */
-@property(nonatomic, copy) NSString* epilogue;
+@property(nonatomic, copy, nullable) NSString* epilogue;
 
 /**
  *  Sets the footer for the uploader web interface.
@@ -156,7 +156,10 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  *  This method is the designated initializer for the class.
  */
-- (instancetype)initWithUploadDirectory:(NSString*)path;
+- (instancetype)initWithUploadDirectory:(NSString*)path NS_DESIGNATED_INITIALIZER;
+
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)new NS_UNAVAILABLE;
 
 @end
 

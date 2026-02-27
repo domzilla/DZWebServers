@@ -30,6 +30,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  *  Convenience constants for "informational" HTTP status codes.
  */
@@ -114,3 +116,5 @@ typedef NS_ENUM(NSInteger, DZWebServerServerErrorHTTPStatusCode) {
   kDZWebServerHTTPStatusCode_NotExtended = 510,
   kDZWebServerHTTPStatusCode_NetworkAuthenticationRequired = 511
 };
+
+NS_ASSUME_NONNULL_END

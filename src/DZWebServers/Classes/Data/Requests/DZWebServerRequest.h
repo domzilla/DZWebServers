@@ -92,29 +92,29 @@ extern NSString* const DZWebServerRequestAttribute_RegexCaptures;
 /**
  *  Returns the HTTP method for the request.
  */
-@property(nonatomic, readonly) NSString* method;
+@property(nonatomic, copy, readonly) NSString* method;
 
 /**
  *  Returns the URL for the request.
  */
-@property(nonatomic, readonly) NSURL* URL;
+@property(nonatomic, copy, readonly) NSURL* URL;
 
 /**
  *  Returns the HTTP headers for the request.
  */
-@property(nonatomic, readonly) NSDictionary<NSString*, NSString*>* headers;
+@property(nonatomic, copy, readonly) NSDictionary<NSString*, NSString*>* headers;
 
 /**
  *  Returns the path component of the URL for the request.
  */
-@property(nonatomic, readonly) NSString* path;
+@property(nonatomic, copy, readonly) NSString* path;
 
 /**
  *  Returns the parsed and unescaped query component of the URL for the request.
  *
  *  @warning This property will be nil if there is no query in the URL.
  */
-@property(nonatomic, readonly, nullable) NSDictionary<NSString*, NSString*>* query;
+@property(nonatomic, copy, readonly, nullable) NSDictionary<NSString*, NSString*>* query;
 
 /**
  *  Returns the content type for the body of the request parsed from the
@@ -124,7 +124,7 @@ extern NSString* const DZWebServerRequestAttribute_RegexCaptures;
  *  "application/octet-stream" if a body is present but there was no
  *  "Content-Type" header.
  */
-@property(nonatomic, readonly, nullable) NSString* contentType;
+@property(nonatomic, copy, readonly, nullable) NSString* contentType;
 
 /**
  *  Returns the content length for the body of the request parsed from the
@@ -144,7 +144,7 @@ extern NSString* const DZWebServerRequestAttribute_RegexCaptures;
 /**
  *  Returns the parsed "If-None-Match" header or nil if absent or malformed.
  */
-@property(nonatomic, readonly, nullable) NSString* ifNoneMatch;
+@property(nonatomic, copy, readonly, nullable) NSString* ifNoneMatch;
 
 /**
  *  Returns the parsed "Range" header or (NSUIntegerMax, 0) if absent or malformed.
@@ -162,31 +162,45 @@ extern NSString* const DZWebServerRequestAttribute_RegexCaptures;
 /**
  *  Returns the address of the local peer (i.e. server) for the request
  *  as a raw "struct sockaddr".
+ *
+ *  @warning This property is set by the connection after initialization
+ *  and may be nil if accessed before the connection assigns it.
  */
-@property(nonatomic, readonly) NSData* localAddressData;
+@property(nonatomic, copy, readonly, nullable) NSData* localAddressData;
 
 /**
  *  Returns the address of the local peer (i.e. server) for the request
  *  as a string.
+ *
+ *  @warning This property is computed from localAddressData and may be nil
+ *  if the address data has not been set yet.
  */
-@property(nonatomic, readonly) NSString* localAddressString;
+@property(nonatomic, copy, readonly, nullable) NSString* localAddressString;
 
 /**
  *  Returns the address of the remote peer (i.e. client) for the request
  *  as a raw "struct sockaddr".
+ *
+ *  @warning This property is set by the connection after initialization
+ *  and may be nil if accessed before the connection assigns it.
  */
-@property(nonatomic, readonly) NSData* remoteAddressData;
+@property(nonatomic, copy, readonly, nullable) NSData* remoteAddressData;
 
 /**
  *  Returns the address of the remote peer (i.e. client) for the request
  *  as a string.
+ *
+ *  @warning This property is computed from remoteAddressData and may be nil
+ *  if the address data has not been set yet.
  */
-@property(nonatomic, readonly) NSString* remoteAddressString;
+@property(nonatomic, copy, readonly, nullable) NSString* remoteAddressString;
 
 /**
  *  This method is the designated initializer for the class.
  */
-- (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary<NSString*, NSString*>*)headers path:(NSString*)path query:(nullable NSDictionary<NSString*, NSString*>*)query;
+- (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary<NSString*, NSString*>*)headers path:(NSString*)path query:(nullable NSDictionary<NSString*, NSString*>*)query NS_DESIGNATED_INITIALIZER;
+
+- (instancetype)init NS_UNAVAILABLE;
 
 /**
  *  Convenience method that checks if the contentType property is defined.

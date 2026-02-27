@@ -41,7 +41,8 @@ extern "C" {
  *  types. Keys of the dictionary must be lowercased file extensions without
  *  the period, and the values must be the corresponding MIME types.
  */
-NSString* DZWebServerGetMimeTypeForExtension(NSString* extension, NSDictionary<NSString*, NSString*>* _Nullable overrides);
+NSString* DZWebServerGetMimeTypeForExtension(NSString* extension, NSDictionary<NSString*, NSString*>* _Nullable overrides)
+    NS_SWIFT_NAME(DZWebServerGetMimeType(forExtension:overrides:));
 
 /**
  *  Add percent-escapes to a string so it can be used in a URL.

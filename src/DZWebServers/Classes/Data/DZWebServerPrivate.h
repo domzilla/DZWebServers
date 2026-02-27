@@ -72,14 +72,14 @@
 
 #import "XLFacilityMacros.h"
 
-#define GWS_LOG_DEBUG(...) XLOG_DEBUG(__VA_ARGS__)
-#define GWS_LOG_VERBOSE(...) XLOG_VERBOSE(__VA_ARGS__)
-#define GWS_LOG_INFO(...) XLOG_INFO(__VA_ARGS__)
-#define GWS_LOG_WARNING(...) XLOG_WARNING(__VA_ARGS__)
-#define GWS_LOG_ERROR(...) XLOG_ERROR(__VA_ARGS__)
+#define DWS_LOG_DEBUG(...) XLOG_DEBUG(__VA_ARGS__)
+#define DWS_LOG_VERBOSE(...) XLOG_VERBOSE(__VA_ARGS__)
+#define DWS_LOG_INFO(...) XLOG_INFO(__VA_ARGS__)
+#define DWS_LOG_WARNING(...) XLOG_WARNING(__VA_ARGS__)
+#define DWS_LOG_ERROR(...) XLOG_ERROR(__VA_ARGS__)
 
-#define GWS_DCHECK(__CONDITION__) XLOG_DEBUG_CHECK(__CONDITION__)
-#define GWS_DNOT_REACHED() XLOG_DEBUG_UNREACHABLE()
+#define DWS_DCHECK(__CONDITION__) XLOG_DEBUG_CHECK(__CONDITION__)
+#define DWS_DNOT_REACHED() XLOG_DEBUG_UNREACHABLE()
 
 /**
  *  If all of the above fail, then use DZWebServer built-in
@@ -102,26 +102,26 @@ extern DZWebServerLoggingLevel DZWebServerLogLevel;
 extern void DZWebServerLogMessage(DZWebServerLoggingLevel level, NSString* _Nonnull format, ...) NS_FORMAT_FUNCTION(2, 3);
 
 #if DEBUG
-#define GWS_LOG_DEBUG(...)                                                                                                             \
+#define DWS_LOG_DEBUG(...)                                                                                                             \
   do {                                                                                                                                 \
     if (DZWebServerLogLevel <= kDZWebServerLoggingLevel_Debug) DZWebServerLogMessage(kDZWebServerLoggingLevel_Debug, __VA_ARGS__); \
   } while (0)
 #else
-#define GWS_LOG_DEBUG(...)
+#define DWS_LOG_DEBUG(...)
 #endif
-#define GWS_LOG_VERBOSE(...)                                                                                                               \
+#define DWS_LOG_VERBOSE(...)                                                                                                               \
   do {                                                                                                                                     \
     if (DZWebServerLogLevel <= kDZWebServerLoggingLevel_Verbose) DZWebServerLogMessage(kDZWebServerLoggingLevel_Verbose, __VA_ARGS__); \
   } while (0)
-#define GWS_LOG_INFO(...)                                                                                                            \
+#define DWS_LOG_INFO(...)                                                                                                            \
   do {                                                                                                                               \
     if (DZWebServerLogLevel <= kDZWebServerLoggingLevel_Info) DZWebServerLogMessage(kDZWebServerLoggingLevel_Info, __VA_ARGS__); \
   } while (0)
-#define GWS_LOG_WARNING(...)                                                                                                               \
+#define DWS_LOG_WARNING(...)                                                                                                               \
   do {                                                                                                                                     \
     if (DZWebServerLogLevel <= kDZWebServerLoggingLevel_Warning) DZWebServerLogMessage(kDZWebServerLoggingLevel_Warning, __VA_ARGS__); \
   } while (0)
-#define GWS_LOG_ERROR(...)                                                                                                             \
+#define DWS_LOG_ERROR(...)                                                                                                             \
   do {                                                                                                                                 \
     if (DZWebServerLogLevel <= kDZWebServerLoggingLevel_Error) DZWebServerLogMessage(kDZWebServerLoggingLevel_Error, __VA_ARGS__); \
   } while (0)
@@ -132,22 +132,22 @@ extern void DZWebServerLogMessage(DZWebServerLoggingLevel level, NSString* _Nonn
  *  Consistency check macros used when building Debug only.
  */
 
-#if !defined(GWS_DCHECK) || !defined(GWS_DNOT_REACHED)
+#if !defined(DWS_DCHECK) || !defined(DWS_DNOT_REACHED)
 
 #if DEBUG
 
-#define GWS_DCHECK(__CONDITION__) \
+#define DWS_DCHECK(__CONDITION__) \
   do {                            \
     if (!(__CONDITION__)) {       \
       abort();                    \
     }                             \
   } while (0)
-#define GWS_DNOT_REACHED() abort()
+#define DWS_DNOT_REACHED() abort()
 
 #else
 
-#define GWS_DCHECK(__CONDITION__)
-#define GWS_DNOT_REACHED()
+#define DWS_DCHECK(__CONDITION__)
+#define DWS_DNOT_REACHED()
 
 #endif
 
@@ -184,6 +184,8 @@ extern NSString* DZWebServerStringFromSockAddr(const struct sockaddr* addr, BOOL
 - (instancetype)initWithServer:(DZWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket;
 @end
 
+@class DZWebServerHandler;
+
 @interface DZWebServer ()
 @property(nonatomic, readonly) NSMutableArray<DZWebServerHandler*>* handlers;
 @property(nonatomic, readonly, nullable) NSString* serverName;
@@ -203,8 +205,8 @@ extern NSString* DZWebServerStringFromSockAddr(const struct sockaddr* addr, BOOL
 
 @interface DZWebServerRequest ()
 @property(nonatomic, readonly) BOOL usesChunkedTransferEncoding;
-@property(nonatomic) NSData* localAddressData;
-@property(nonatomic) NSData* remoteAddressData;
+@property(nonatomic, copy, nullable) NSData* localAddressData;
+@property(nonatomic, copy, nullable) NSData* remoteAddressData;
 - (void)prepareForWriting;
 - (BOOL)performOpen:(NSError**)error;
 - (BOOL)performWriteData:(NSData*)data error:(NSError**)error;

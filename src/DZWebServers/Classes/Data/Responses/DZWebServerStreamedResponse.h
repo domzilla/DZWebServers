@@ -55,6 +55,8 @@ typedef void (^DZWebServerAsyncStreamBlock)(DZWebServerBodyReaderCompletionBlock
 @interface DZWebServerStreamedResponse : DZWebServerResponse
 @property(nonatomic, copy) NSString* contentType;  // Redeclare as non-null
 
+- (instancetype)init NS_UNAVAILABLE;
+
 /**
  *  Creates a response with streamed data and a given content type.
  */
@@ -73,7 +75,7 @@ typedef void (^DZWebServerAsyncStreamBlock)(DZWebServerBodyReaderCompletionBlock
 /**
  *  This method is the designated initializer for the class.
  */
-- (instancetype)initWithContentType:(NSString*)type asyncStreamBlock:(DZWebServerAsyncStreamBlock)block;
+- (instancetype)initWithContentType:(NSString*)type asyncStreamBlock:(DZWebServerAsyncStreamBlock)block NS_DESIGNATED_INITIALIZER;
 
 @end
 

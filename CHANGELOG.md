@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- Swift interoperability audit of all public headers
+  - `NS_ASSUME_NONNULL_BEGIN`/`END` on umbrella header and HTTP status codes header
+  - `NS_DESIGNATED_INITIALIZER` on designated initializers across all classes
+  - `NS_UNAVAILABLE` on `-init`/`+new` where a specific initializer is required (DZWebServerRequest, DZWebServerDataResponse, DZWebServerFileResponse, DZWebServerStreamedResponse, DZWebUploader, DZWebDAVServer)
+  - `NS_SWIFT_DISABLE_ASYNC` on `asyncReadDataWithCompletion:` (DZWebServerBodyReader protocol) — block is called multiple times, not a completion handler
+  - `NS_SWIFT_NAME` on `DZWebServerGetMimeTypeForExtension()` for better Swift parameter labels
+
+### Changed
+- Added `copy` attribute to all `NSString`, `NSData`, `NSDictionary`, and `NSArray` readonly properties across all public headers for correct value semantics
+- Marked `allowedFileExtensions` as `nullable` on DZWebUploader and DZWebDAVServer (default is nil)
+- Marked `epilogue` as `nullable` on DZWebUploader (default is nil)
+- Marked `localAddressData`, `remoteAddressData`, `localAddressString`, `remoteAddressString` as `nullable` on DZWebServerRequest (set after init by connection)
+- Marked `setBuiltInLogger:` block parameter as `nullable` (pass nil to reset to default logger)
+- Removed redundant `_Nonnull` from `DZWebServerBuiltInLoggerBlock` message parameter (implicit via `NS_ASSUME_NONNULL`)
+- Moved `@class DZWebServerHandler` forward declaration from DZWebServerConnection.h (public) to DZWebServerPrivate.h (private) — not referenced in any public API
+- Completed GWS_ to DWS_ macro prefix rename in DZWebServerPrivate.h definitions and all .m file usages
+
 ## [November 2025]
 
 ### Changed

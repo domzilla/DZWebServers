@@ -28,11 +28,15 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 //! Project version number for BGFoundation.
 FOUNDATION_EXPORT double DZWebServersVersionNumber;
 
 //! Project version string for BGFoundation.
 FOUNDATION_EXPORT const unsigned char DZWebServersVersionString[];
+
+NS_ASSUME_NONNULL_END
 
 // DZWebServer Core
 #import "DZWebServer.h"

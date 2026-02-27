@@ -92,12 +92,12 @@ NSString* const DZWebServerRequestAttribute_RegexCaptures = @"DZWebServerRequest
 }
 
 - (BOOL)writeData:(NSData*)data error:(NSError**)error {
-  GWS_DCHECK(!_finished);
+  DWS_DCHECK(!_finished);
   _stream.next_in = (Bytef*)data.bytes;
   _stream.avail_in = (uInt)data.length;
   NSMutableData* decodedData = [[NSMutableData alloc] initWithLength:kGZipInitialBufferSize];
   if (decodedData == nil) {
-    GWS_DNOT_REACHED();
+    DWS_DNOT_REACHED();
     return NO;
   }
   NSUInteger length = 0;
@@ -127,7 +127,7 @@ NSString* const DZWebServerRequestAttribute_RegexCaptures = @"DZWebServerRequest
 }
 
 - (BOOL)close:(NSError**)error {
-  GWS_DCHECK(_finished);
+  DWS_DCHECK(_finished);
   inflateEnd(&_stream);
   return [super close:error];
 }
@@ -155,8 +155,8 @@ NSString* const DZWebServerRequestAttribute_RegexCaptures = @"DZWebServerRequest
     if (lengthHeader) {
       NSInteger length = [lengthHeader integerValue];
       if (_usesChunkedTransferEncoding || (length < 0)) {
-        GWS_LOG_WARNING(@"Invalid 'Content-Length' header '%@' for '%@' request on \"%@\"", lengthHeader, _method, _URL);
-        GWS_DNOT_REACHED();
+        DWS_LOG_WARNING(@"Invalid 'Content-Length' header '%@' for '%@' request on \"%@\"", lengthHeader, _method, _URL);
+        DWS_DNOT_REACHED();
         return nil;
       }
       _contentLength = length;
@@ -170,7 +170,7 @@ NSString* const DZWebServerRequestAttribute_RegexCaptures = @"DZWebServerRequest
       _contentLength = NSUIntegerMax;
     } else {
       if (_contentType) {
-        GWS_LOG_WARNING(@"Ignoring 'Content-Type' header for '%@' request on \"%@\"", _method, _URL);
+        DWS_LOG_WARNING(@"Ignoring 'Content-Type' header for '%@' request on \"%@\"", _method, _URL);
         _contentType = nil;  // Content-Type without Content-Length or chunked-encoding doesn't make sense
       }
       _contentLength = NSUIntegerMax;
@@ -208,7 +208,7 @@ NSString* const DZWebServerRequestAttribute_RegexCaptures = @"DZWebServerRequest
         }
       }
       if ((_byteRange.location == NSUIntegerMax) && (_byteRange.length == 0)) {  // Ignore "Range" header if syntactically invalid
-        GWS_LOG_WARNING(@"Failed to parse 'Range' header \"%@\" for url: %@", rangeHeader, url);
+        DWS_LOG_WARNING(@"Failed to parse 'Range' header \"%@\" for url: %@", rangeHeader, url);
       }
     }
 
@@ -256,10 +256,10 @@ NSString* const DZWebServerRequestAttribute_RegexCaptures = @"DZWebServerRequest
 }
 
 - (BOOL)performOpen:(NSError**)error {
-  GWS_DCHECK(_contentType);
-  GWS_DCHECK(_writer);
+  DWS_DCHECK(_contentType);
+  DWS_DCHECK(_writer);
   if (_opened) {
-    GWS_DNOT_REACHED();
+    DWS_DNOT_REACHED();
     return NO;
   }
   _opened = YES;
@@ -267,12 +267,12 @@ NSString* const DZWebServerRequestAttribute_RegexCaptures = @"DZWebServerRequest
 }
 
 - (BOOL)performWriteData:(NSData*)data error:(NSError**)error {
-  GWS_DCHECK(_opened);
+  DWS_DCHECK(_opened);
   return [_writer writeData:data error:error];
 }
 
 - (BOOL)performClose:(NSError**)error {
-  GWS_DCHECK(_opened);
+  DWS_DCHECK(_opened);
   return [_writer close:error];
 }
 

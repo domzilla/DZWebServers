@@ -49,24 +49,24 @@ static dispatch_queue_t _dateFormatterQueue = NULL;
 
 // TODO: Handle RFC 850 and ANSI C's asctime() format
 void DZWebServerInitializeFunctions(void) {
-  GWS_DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
+  DWS_DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
   if (_dateFormatterRFC822 == nil) {
     _dateFormatterRFC822 = [[NSDateFormatter alloc] init];
     _dateFormatterRFC822.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
     _dateFormatterRFC822.dateFormat = @"EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'";
     _dateFormatterRFC822.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
-    GWS_DCHECK(_dateFormatterRFC822);
+    DWS_DCHECK(_dateFormatterRFC822);
   }
   if (_dateFormatterISO8601 == nil) {
     _dateFormatterISO8601 = [[NSDateFormatter alloc] init];
     _dateFormatterISO8601.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
     _dateFormatterISO8601.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss'+00:00'";
     _dateFormatterISO8601.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
-    GWS_DCHECK(_dateFormatterISO8601);
+    DWS_DCHECK(_dateFormatterISO8601);
   }
   if (_dateFormatterQueue == NULL) {
     _dateFormatterQueue = dispatch_queue_create(NULL, DISPATCH_QUEUE_SERIAL);
-    GWS_DCHECK(_dateFormatterQueue);
+    DWS_DCHECK(_dateFormatterQueue);
   }
 }
 
@@ -227,8 +227,8 @@ NSDictionary<NSString*, NSString*>* DZWebServerParseURLEncodedForm(NSString* for
     if (unescapedKey && unescapedValue) {
       [parameters setObject:unescapedValue forKey:unescapedKey];
     } else {
-      GWS_LOG_WARNING(@"Failed parsing URL encoded form for key \"%@\" and value \"%@\"", key, value);
-      GWS_DNOT_REACHED();
+      DWS_LOG_WARNING(@"Failed parsing URL encoded form for key \"%@\" and value \"%@\"", key, value);
+      DWS_DNOT_REACHED();
     }
 
     if ([scanner isAtEnd]) {
@@ -244,7 +244,7 @@ NSString* DZWebServerStringFromSockAddr(const struct sockaddr* addr, BOOL includ
   char serviceBuffer[NI_MAXSERV];
   if (getnameinfo(addr, addr->sa_len, hostBuffer, sizeof(hostBuffer), serviceBuffer, sizeof(serviceBuffer), NI_NUMERICHOST | NI_NUMERICSERV | NI_NOFQDN) != 0) {
 #if DEBUG
-    GWS_DNOT_REACHED();
+    DWS_DNOT_REACHED();
 #else
     return @"";
 #endif

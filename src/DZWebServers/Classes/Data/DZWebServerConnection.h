@@ -29,8 +29,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class DZWebServerHandler;
-
 /**
  *  The DZWebServerConnection class is instantiated by DZWebServer to handle
  *  each new HTTP connection. Each instance stays alive until the connection is
@@ -59,25 +57,25 @@ NS_ASSUME_NONNULL_BEGIN
  *  Returns the address of the local peer (i.e. server) of the connection
  *  as a raw "struct sockaddr".
  */
-@property(nonatomic, readonly) NSData* localAddressData;
+@property(nonatomic, copy, readonly) NSData* localAddressData;
 
 /**
  *  Returns the address of the local peer (i.e. server) of the connection
  *  as a string.
  */
-@property(nonatomic, readonly) NSString* localAddressString;
+@property(nonatomic, copy, readonly) NSString* localAddressString;
 
 /**
  *  Returns the address of the remote peer (i.e. client) of the connection
  *  as a raw "struct sockaddr".
  */
-@property(nonatomic, readonly) NSData* remoteAddressData;
+@property(nonatomic, copy, readonly) NSData* remoteAddressData;
 
 /**
  *  Returns the address of the remote peer (i.e. client) of the connection
  *  as a string.
  */
-@property(nonatomic, readonly) NSString* remoteAddressString;
+@property(nonatomic, copy, readonly) NSString* remoteAddressString;
 
 /**
  *  Returns the total number of bytes received from the remote peer (i.e. client)
