@@ -131,6 +131,14 @@ xcodebuild test -project src/DZWebServers.xcodeproj -scheme DZWebServersTests \
 - When removing public API, **remove the corresponding tests**
 - One test file per public class
 
+**Troubleshooting:**
+If tests hang due to parallel execution (e.g., port conflicts), add .serialized to the affected @Suite declarations.
+For example: `@Suite("MyTests", .serialized, .tags(.integration))`
+
+**When tests fail:**
+- Fix the root cause — do not skip or disable tests
+- If a test failure reveals a real bug in the framework, fix the framework code
+
 ---
 
 ## Notes
