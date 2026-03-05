@@ -6,7 +6,7 @@ Lightweight, GCD-based HTTP 1.1 server framework for embedding in iOS and macOS 
 ## Tech Stack
 - **Language**: Objective-C
 - **Type**: Xcode Framework
-- **Target-Platforms**: iOS 15.6+ / macOS 12.4+
+- **Target-Platforms**: iOS 17.0+ / macOS 14.0+
 
 ## Framework Dependencies
 None. This framework depends only on Foundation and CoreServices (system frameworks).
