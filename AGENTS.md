@@ -11,37 +11,6 @@ Lightweight, GCD-based HTTP 1.1 server framework for embedding in iOS and macOS 
 ## Framework Dependencies
 None. This framework depends only on Foundation and CoreServices (system frameworks).
 
-## Source Layout
-```
-src/DZWebServers/
-├── Classes/Data/
-│   ├── DZWebServers.h                          # Umbrella header
-│   ├── DZWebServer.h / .m                      # Core server class
-│   ├── DZWebServerConnection.h / .m            # Connection handler
-│   ├── DZWebServerFunctions.h / .m             # Utility C functions
-│   ├── DZWebServerHTTPStatusCodes.h            # HTTP status constants
-│   ├── DZWebServerPrivate.h                    # Private logging/macros
-│   ├── Requests/                               # Request subclasses
-│   │   ├── DZWebServerRequest.h / .m           # Base request
-│   │   ├── DZWebServerDataRequest.h / .m       # In-memory body
-│   │   ├── DZWebServerFileRequest.h / .m       # File-backed body
-│   │   ├── DZWebServerMultiPartFormRequest.h / .m  # Multipart form
-│   │   └── DZWebServerURLEncodedFormRequest.h / .m # URL-encoded form
-│   ├── Responses/                              # Response subclasses
-│   │   ├── DZWebServerResponse.h / .m          # Base response
-│   │   ├── DZWebServerDataResponse.h / .m      # In-memory response
-│   │   ├── DZWebServerFileResponse.h / .m      # File-backed response
-│   │   ├── DZWebServerStreamedResponse.h / .m  # Streaming response
-│   │   └── DZWebServerErrorResponse.h / .m     # Error responses
-│   ├── Uploader/
-│   │   └── DZWebUploader.h / .m                # Browser-based file upload UI
-│   └── DAV/
-│       └── DZWebDAVServer.h / .m               # WebDAV server extension
-└── Resources/
-    ├── DZWebUploader.bundle/                   # HTML/CSS/JS for uploader UI
-    └── PrivacyInfo.xcprivacy                   # Privacy manifest
-```
-
 ## Style & Conventions (MANDATORY)
 Style guides are loaded automatically via `~/.claude/rules/` based on file type.
 - **Objective-C** (`*.h`, `*.m`): `~/Agents/Style/objc-style-guide.md`
