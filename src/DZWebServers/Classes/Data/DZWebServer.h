@@ -335,9 +335,10 @@ extern NSString* const DZWebServerOption_ConnectedStateCoalescingInterval;
  *
  *  Determines the priority of the global dispatch queue on which incoming
  *  connections are accepted and processed. Must be one of the
- *  @c DISPATCH_QUEUE_PRIORITY_* constants.
+ *  @c QOS_CLASS_* constants (legacy @c DISPATCH_QUEUE_PRIORITY_* values are
+ *  also accepted by @c dispatch_get_global_queue for backward compatibility).
  *
- *  The default value is @c DISPATCH_QUEUE_PRIORITY_DEFAULT.
+ *  The default value is @c QOS_CLASS_DEFAULT.
  */
 extern NSString* const DZWebServerOption_DispatchQueuePriority;
 

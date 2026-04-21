@@ -567,7 +567,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   _connectionClass = _GetOption(_options, DZWebServerOption_ConnectionClass, [DZWebServerConnection class]);
   _shouldAutomaticallyMapHEADToGET = [(NSNumber*)_GetOption(_options, DZWebServerOption_AutomaticallyMapHEADToGET, @YES) boolValue];
   _disconnectDelay = [(NSNumber*)_GetOption(_options, DZWebServerOption_ConnectedStateCoalescingInterval, @1.0) doubleValue];
-  _dispatchQueuePriority = [(NSNumber*)_GetOption(_options, DZWebServerOption_DispatchQueuePriority, @(DISPATCH_QUEUE_PRIORITY_DEFAULT)) longValue];
+  _dispatchQueuePriority = [(NSNumber*)_GetOption(_options, DZWebServerOption_DispatchQueuePriority, @(QOS_CLASS_DEFAULT)) longValue];
 
   _source4 = [self _createDispatchSourceWithListeningSocket:listeningSocket4 isIPv6:NO];
   _source6 = [self _createDispatchSourceWithListeningSocket:listeningSocket6 isIPv6:YES];

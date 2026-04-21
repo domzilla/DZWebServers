@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- `DZWebServer`: Modernized `DZWebServerOption_DispatchQueuePriority` default from `DISPATCH_QUEUE_PRIORITY_DEFAULT` to `QOS_CLASS_DEFAULT`. Both are accepted by `dispatch_get_global_queue`; legacy values callers pass continue to work. Updated the header doc comment to recommend `QOS_CLASS_*` constants and note that legacy values remain supported.
+
 ### Added
 - Comprehensive Swift Testing test suite: 766 tests in 165 suites covering all 16 public classes
   - `DZWebServersTests` target using Swift Testing framework (`@Test`, `#expect`, `@Suite`)
