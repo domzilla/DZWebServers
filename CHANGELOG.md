@@ -6,640 +6,324 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Changed
-- `DZWebServer`: Modernized `DZWebServerOption_DispatchQueuePriority` default from `DISPATCH_QUEUE_PRIORITY_DEFAULT` to `QOS_CLASS_DEFAULT`. Both are accepted by `dispatch_get_global_queue`; legacy values callers pass continue to work. Updated the header doc comment to recommend `QOS_CLASS_*` constants and note that legacy values remain supported.
-
 ### Added
-- Comprehensive Swift Testing test suite: 766 tests in 165 suites covering all 16 public classes
-  - `DZWebServersTests` target using Swift Testing framework (`@Test`, `#expect`, `@Suite`)
-  - Integration tests against live `DZWebServer` instances on ephemeral ports
-  - Parameterized tests for MIME types, HTTP status codes, header parsing, byte ranges, and more
-  - Full coverage for DZWebServer, DZWebServerConnection, DZWebServerFunctions, DZWebServerHTTPStatusCodes, DZWebServerRequest, DZWebServerDataRequest, DZWebServerFileRequest, DZWebServerMultiPartFormRequest, DZWebServerURLEncodedFormRequest, DZWebServerResponse, DZWebServerDataResponse, DZWebServerFileResponse, DZWebServerStreamedResponse, DZWebServerErrorResponse, DZWebUploader, and DZWebDAVServer
-- Comprehensive HeaderDoc/Doxygen-style documentation for all public API declarations across all 17 public headers
-  - Classes, protocols, categories, properties, methods, typedefs, block types, enums, and constants
-  - Implementation-accurate details: default values, thread safety, edge cases, RFC references
-  - `@brief`, `@discussion`, `@param`, `@return`, `@note`, `@warning`, `@see` tags throughout
-- Swift interoperability audit of all public headers
-  - `NS_ASSUME_NONNULL_BEGIN`/`END` on umbrella header and HTTP status codes header
-  - `NS_DESIGNATED_INITIALIZER` on designated initializers across all classes
-  - `NS_UNAVAILABLE` on `-init`/`+new` where a specific initializer is required (DZWebServerRequest, DZWebServerDataResponse, DZWebServerFileResponse, DZWebServerStreamedResponse, DZWebUploader, DZWebDAVServer)
-  - `NS_SWIFT_DISABLE_ASYNC` on `asyncReadDataWithCompletion:` (DZWebServerBodyReader protocol) — block is called multiple times, not a completion handler
-  - `NS_SWIFT_NAME` on `DZWebServerGetMimeTypeForExtension()` for better Swift parameter labels
-  - Swift-friendly non-variadic alternatives for C variadic methods invisible to Swift:
-    - `logVerboseMessage:`, `logInfoMessage:`, `logWarningMessage:`, `logErrorMessage:` on DZWebServer (Logging) with `NS_SWIFT_NAME` for clean Swift call sites (`server.logVerbose("msg")`)
-    - `responseWithClientError:formattedMessage:`, `responseWithServerError:formattedMessage:` and `underlyingError:` variants on DZWebServerErrorResponse (factory methods)
-    - `initWithClientError:formattedMessage:`, `initWithServerError:formattedMessage:` and `underlyingError:` variants on DZWebServerErrorResponse with `NS_SWIFT_NAME` for clean initializer syntax
-  - `NS_SWIFT_UNAVAILABLE` on all original C variadic methods pointing to the new Swift-friendly alternatives
+- Documentation for all public APIs.
+- Test suite covering the server, connection, request and response classes, the web uploader, and WebDAV server.
+- Swift-friendly non-variadic alternatives for the C variadic logging methods on `DZWebServer` and the error response factory methods.
 
 ### Changed
-- Added `copy` attribute to all `NSString`, `NSData`, `NSDictionary`, and `NSArray` readonly properties across all public headers for correct value semantics
-- Marked `allowedFileExtensions` as `nullable` on DZWebUploader and DZWebDAVServer (default is nil)
-- Marked `epilogue` as `nullable` on DZWebUploader (default is nil)
-- Marked `localAddressData`, `remoteAddressData`, `localAddressString`, `remoteAddressString` as `nullable` on DZWebServerRequest (set after init by connection)
-- Marked `setBuiltInLogger:` block parameter as `nullable` (pass nil to reset to default logger)
-- Removed redundant `_Nonnull` from `DZWebServerBuiltInLoggerBlock` message parameter (implicit via `NS_ASSUME_NONNULL`)
-- Moved `@class DZWebServerHandler` forward declaration from DZWebServerConnection.h (public) to DZWebServerPrivate.h (private) — not referenced in any public API
-- Completed GWS_ to DWS_ macro prefix rename in DZWebServerPrivate.h definitions and all .m file usages
+- Tightened Swift interoperability across all public headers, including nullability, copy semantics, and Swift-friendly naming.
+- Modernized `DZWebServerOption_DispatchQueuePriority` default to `QOS_CLASS_DEFAULT`; legacy priority values continue to work.
 
 ## [November 2025]
 
 ### Changed
-- Raised deployment target and then reverted to iOS 15 / macOS 12
+- Set deployment targets back to iOS 15 / macOS 12.
 
 ## [April 2025]
 
 ### Fixed
-- Added type cast to silence compiler warning
+- Silenced a compiler warning with an explicit type cast.
 
 ## [September 2024]
 
 ### Changed
-- Updated project configuration
+- Updated project configuration.
 
 ## [February 2024]
 
 ### Added
-- macOS target support
-- Privacy manifest
+- macOS target support.
+- Privacy manifest.
 
 ### Changed
-- Updated umbrella header
-- Updated directory structure
-- Updated license
-- Refactoring improvements
-
-### Fixed
-- Fixed compiler warning
+- Updated umbrella header and directory structure.
 
 ## [July 2020]
 
 ### Changed
-- Replaced deprecated MobileCoreServices with CoreServices
-
-## [May 2020]
-
-### Changed
-- Replaced MobileCoreServices with CoreServices for compatibility
+- Replaced deprecated MobileCoreServices with CoreServices.
 
 ## [March 2020]
 
 ### Changed
-- Updated to Xcode 11
-- Updated Travis CI to Xcode 11.3
+- Updated to Xcode 11.
 
 ### Fixed
-- Ignore deprecation warning for CC_MD5 on iOS 13+ and macOS 10.15+
-- Fixed Info.plist build warnings
-- Fixed Clang build warning
+- Silenced `CC_MD5` deprecation warning on iOS 13+ and macOS 10.15+.
+- Fixed `Info.plist` and Clang build warnings.
 
 ## [December 2019]
 
 ### Added
-- Support for setting txtData in Bonjour service
+- Support for setting `txtData` on the Bonjour service.
 
 ## [August 2019]
 
 ### Added
-- Enforced hidden and extensions restrictions when moving and copying files in uploaders
+- Hidden file and extension restrictions are now enforced when moving and copying files in uploaders.
 
 ### Changed
-- Updated to Swift 5
-- Updated to Xcode 10.3
-- Updated Travis CI to Xcode 10.3
+- Updated to Swift 5.
 
 ### Fixed
-- Fixed GCDWebServerBodyReaderCompletionBlock not allowing null data
-
-## [July 2019]
-
-### Changed
-- Updated swebServer.swift hello world example
+- `GCDWebServerBodyReaderCompletionBlock` now accepts null data.
 
 ## [March 2019]
 
 ### Added
-- Support for building and running GCDWebServer in app extensions
-- Reverted app extensions merge (stability concerns)
+- Support for building and running in app extensions.
 
 ## [January 2019]
 
 ### Added
-- GCDWebServerNormalizePath() API
-- Explicit modulemap for frameworks
+- `GCDWebServerNormalizePath()` API.
+- Explicit modulemap for frameworks.
 
 ### Changed
-- Use module in test iOS and tvOS apps
-- Changed iOS framework target family to "Universal"
-- Switched tvOS targets to manual signing
-- Use GCDWebServer framework for iOS and tvOS test apps
-- Converted iOS and tvOS test apps to Swift
-- Updated copyright years
+- Use a module in the iOS and tvOS test apps.
+- Converted iOS and tvOS test apps to Swift.
 
 ### Fixed
-- Fixed bug in _CreateHTTPMessageFromPerformingRequest()
-- Fixed -stringByStandardizingPath handling on Mac CLT
-- Only fallback to -[NSData base64Encoding] on macOS prior to 10.9
-- Use @available() to check for API availability instead of -respondsToSelector:
-- Fixed implicit-retain-self warnings
-- Fixed strict-prototypes warning
-- Handle CFHTTPMessageCopyBody() now returning NULL for valid messages without body
-- Ensure directories are always listed in deterministic order
-- Fall back to "CFBundleName" in GCDWebUploader footer if "CFBundleDisplayName" not defined
+- Bug in `_CreateHTTPMessageFromPerformingRequest()`.
+- Handle `CFHTTPMessageCopyBody()` returning NULL for valid messages without a body.
+- Directories are listed in deterministic order.
 
 ## [December 2018]
 
 ### Added
-- Added types to collections (generics)
-
-### Changed
-- Updated to Xcode 10.10
-- Updated to clang-format 7.0.0
-
-### Fixed
-- Fixed build warnings
-
-## [October 2018]
-
-### Changed
-- PR comment-based improvements
-
-## [July 2018]
-
-### Changed
-- Made changes based on PR comments
+- Lightweight generics on collection types.
 
 ## [May 2018]
 
 ### Added
-- Support to override built-in logger at runtime
-
-## [November 2017]
-
-### Changed
-- Updated to Xcode 9.1
-
-### Fixed
-- Fixed NS_ASSUME_NONNULL_BEGIN not located at right place in GCDWebServerPrivate.h
+- Override the built-in logger at runtime.
 
 ## [August 2017]
 
 ### Added
-- Return 501 Not Implemented error for requests without matching handlers
+- Return 501 Not Implemented for requests without a matching handler.
 
 ### Changed
-- Simplified podspec
-- Removed support for CocoaLumberJack
+- Removed CocoaLumberjack support.
 
 ### Fixed
-- Fixed CFURLCopyPath() returning NULL for "//" path
-- Fixed static analyzer issues
-- Fixed build warnings
-- Updated project to Xcode 9
-
-## [July 2017]
-
-### Changed
-- Increased CocoaLumberjack dependency to 3.x
-- Changed minimal iOS version to 8.0
+- `CFURLCopyPath()` returning NULL for "//" paths.
 
 ## [June 2017]
 
 ### Added
-- Allow customization of MIME types used by GCDWebServerFileResponse
-- Enable address sanitizer by default for Mac unit tests
-
-### Changed
-- Modernized Objective-C syntax
-- Set default Xcode indentation to 2 spaces
-- Updated to Xcode 8.3
-- Updated to latest clang-format
+- Customize MIME types used by `GCDWebServerFileResponse`.
 
 ### Fixed
-- Fixed data race issue inside GCDWebServerGetMimeTypeForExtension()
+- Data race in `GCDWebServerGetMimeTypeForExtension()`.
 
 ## [January 2017]
 
 ### Changed
-- Increased minimal iOS deployment target to 8.0
-- Updated Travis CI to Xcode 8.2
-- Resolves signing and building issue of dynamic frameworks
-
-### Fixed
-- Fixed build warning
-
-## [December 2016]
-
-### Changed
-- Use clang-formatter to format source code
-- Updated Xcode project format to 8.0
-- Updated to Xcode 8.2
-
-## [November 2016]
-
-### Changed
-- Documentation updates
-
-## [September 2016]
-
-### Changed
-- Made "GCDWebUploader.bundle" non-flat to improve code-signing on OS X
-- Updated for Xcode 8
-- Removed executable bit from test and bundle files
-
-## [July 2016]
-
-### Changed
-- Removed cs.default_subspec from subspecs (disallowed in CocoaPods)
+- Raised minimum iOS deployment target to 8.0.
+- Resolved signing and build issues for dynamic frameworks.
 
 ## [June 2016]
 
 ### Changed
-- Removed exception handling which was only partial
+- Removed partial exception handling.
 
 ### Fixed
-- Fixed typo in GCDWebServerGZipDecoder:open
-- Fixed typo in Swift samples
-
-## [May 2016]
-
-### Fixed
-- Minor documentation fix: "owns" -> "own"
+- Typo in `GCDWebServerGZipDecoder:open`.
 
 ## [April 2016]
 
 ### Added
-- Added option to set the priority of the dispatch queue
-
-### Changed
-- Updated for Xcode 7.3
-
-## [February 2016]
-
-### Changed
-- Removed guards around __kindof usage (project is Xcode 7 only)
-- Added __kindof keyword where appropriate to avoid incompatible block pointer type errors
+- Option to set the priority of the dispatch queue.
 
 ## [January 2016]
 
 ### Added
-- Support WebDAV GET request byte ranges
-
-### Changed
-- Disabled address sanitizer
+- Byte range support for WebDAV GET requests.
 
 ### Fixed
-- Fixed build warning
-- Fixed CocoaLumberjack dependencies
-- Fixed NSRangeException by checking range of NSTextCheckingResult
-- Fixed WebDAV test response files for byte-range responses
-
-## [December 2015]
-
-### Changed
-- Set CFBundleVersion in Info.plist
-- Updated to Xcode 7.2
+- `NSRangeException` by checking the range of `NSTextCheckingResult`.
+- WebDAV test response files for byte-range responses.
 
 ## [November 2015]
 
 ### Added
-- Added support for tvOS
-- Allow serverURL to be assigned on tvOS with wifi connection
-
-### Changed
-- Updated iOS app to latest best practices
-- Updated for Xcode 7.1
-- Removed deprecation warnings on tvOS
-
-## [October 2015]
-
-### Added
-- Enable support for tvOS
+- tvOS support.
+- `serverURL` may be assigned on tvOS over Wi-Fi.
 
 ## [September 2015]
 
 ### Added
-- Added support for NAT port mapping
-- Enable support for Podfiles with use_frameworks!
-- Added minimal tests for Mac framework
-- Add version to framework Info.plist
+- NAT port mapping support.
+- CocoaPods `use_frameworks!` support.
+- Version in framework `Info.plist`.
 
 ### Changed
-- Increased Bonjour resolution timeout to 5 seconds
-- Turn 'buildForRunning' on for 'GCDWebServers' iOS and Mac Schemes
-- Disable testing and running in shared schemes for frameworks
-- Workaround for Swift 2 which fails to retain completion blocks passed as parameters
-
-## [August 2015]
-
-### Changed
-- Documentation updates
+- Increased Bonjour resolution timeout to 5 seconds.
 
 ## [July 2015]
 
 ### Added
-- Carthage documentation
-
-### Changed
-- Updated for Xcode 7
+- Carthage documentation.
 
 ### Fixed
-- Fixed buffer overflow when retrieving socket addresses
-
-## [June 2015]
-
-### Changed
-- Documentation updates
+- Buffer overflow when retrieving socket addresses.
 
 ## [May 2015]
 
 ### Added
-- Added Carthage support
+- Carthage support.
 
 ### Changed
-- Allow harmless 'Content-Type' headers on requests
+- Allow harmless `Content-Type` headers on requests.
 
 ## [April 2015]
 
 ### Added
-- Added remote and local addresses to GCDWebServerRequest
-- Generated Frameworks
-
-### Changed
-- Updated for CocoaLumberJack 2.0
-- Removed Bot scheme
+- Remote and local addresses on `GCDWebServerRequest`.
+- Generated frameworks.
 
 ### Fixed
-- Fixed -serverURL not taking into account GCDWebServerOption_BindToLocalhost
-- Fixed Xcode 6.3 warnings
-- Don't start a background task while app is already in background
-
-## [March 2015]
-
-### Changed
-- Handle starting the server with nil options
-- Made _CompareResources() easier to read
+- `serverURL` honors `GCDWebServerOption_BindToLocalhost`.
+- Don't start a background task while the app is already in background.
 
 ## [January 2015]
 
 ### Added
-- Added asyncResponse2 mode
-- Added Xcode bot scheme
-
-### Fixed
-- Only wipe GCDWebUploader.bundle on Debug to avoid issues on Xcode bot
-- Addressed static analyzer warnings
-- Fixed incorrect documentation for GCDWebServerAsyncStreamBlock
-
-## [December 2014]
-
-### Fixed
-- Removed invalid check
+- `asyncResponse2` mode.
 
 ## [November 2014]
 
 ### Added
-- Added GCDWebServerOption_BindToLocalhost option
+- `GCDWebServerOption_BindToLocalhost` option.
 
 ### Changed
-- Workaround Firefox and IE not showing file selection dialog
-- Removed MRC (Manual Reference Counting) support entirely
+- Worked around Firefox and IE not showing the file selection dialog.
+- Removed manual reference counting support.
 
 ### Fixed
-- Fixed behavior of GCDWebServerOption_BonjourName option
-- Adding check to _endBackgroundTask to verify application exists before calling GWS_DNOT_REACHED
+- Behavior of the `GCDWebServerOption_BonjourName` option.
 
 ## [October 2014]
 
 ### Added
-- Added support for IPv6
-- Added support for third-party logging facilities
-- Added XLFacilityLogging.h
-- Added support for async handlers
-- Added attribute collection to GCDWebServerRequest with regex captures
+- IPv6 support.
+- Third-party logging facility support.
+- Async handler support.
+- Attribute collection on `GCDWebServerRequest` with regex captures.
 
 ### Changed
-- Updated iOS app for iOS 8 SDK
-- Lowered deployment targets
-- Replaced preprocessor constant "NDEBUG" by "DEBUG" and flipped behavior
-- Added README and podspec files to Xcode project
-- Renamed GCDWebServerStreamingBlock to GCDWebServerStreamBlock
-- Upgraded to Xcode 6.1
+- Updated iOS app for the iOS 8 SDK.
+- Renamed `GCDWebServerStreamingBlock` to `GCDWebServerStreamBlock`.
 
 ### Fixed
-- Fixed rare race-condition with disconnection timer
-- Fixed rare exception in GCDWebServerParseURLEncodedForm()
-- Added truly asynchronous support to GCDWebServerStreamedResponse
-- Added support for asynchronous reading in GCDWebServerBodyReader
-- Enabled ENABLE_STRICT_OBJC_MSGSEND
+- Rare race condition with the disconnection timer.
+- Rare exception in `GCDWebServerParseURLEncodedForm()`.
+- Truly asynchronous support in `GCDWebServerStreamedResponse` and `GCDWebServerBodyReader`.
 
 ## [September 2014]
 
 ### Changed
-- Improved handling of symbolic links in -addGETHandlerForBasePath:directoryPath:indexFilename:cacheAge:allowRangeRequests:
-- Improved automatic detection of when to use dispatch_retain() and dispatch_release()
-- Run test against default and oldest supported deployment targets
+- Improved handling of symbolic links in directory GET handlers.
 
 ### Fixed
-- Fixed -bonjourServerURL to correctly return hostname instead of service name
-- Fall back to CFBundleName if CFBundleDisplayName is not available
-- Updated for Xcode 6
-
-## [August 2014]
-
-### Changed
-- Improved automatic detection of dispatch_retain/dispatch_release usage
+- `bonjourServerURL` returns the hostname instead of the service name.
+- Fall back to `CFBundleName` when `CFBundleDisplayName` is unavailable.
 
 ## [July 2014]
 
 ### Fixed
-- Ensure -isRunning works as expected even if GCDWebServerOption_AutomaticallySuspendInBackground is enabled
+- `isRunning` works as expected even with `GCDWebServerOption_AutomaticallySuspendInBackground` enabled.
 
 ## [June 2014]
 
 ### Added
-- Validate paths passed to GCDWebDAVServer and GCDWebUploader for security
-
-### Changed
-- Adding instructions for Swift command line tool
+- Path validation in `GCDWebDAVServer` and `GCDWebUploader` for security.
 
 ## [May 2014]
 
 ### Added
-- Can specify a custom Bonjour service type for the server
-
-### Changed
-- Removed unneeded API for custom Bonjour type
+- Custom Bonjour service type support.
 
 ### Fixed
-- Fix content-types like "application/json; charset=utf-8"
-- Fixed errno being corrupted by LOG_ERROR()
-- Fix GCDWebServerParseURLEncodedForm to allow empty values
-- Ensure connected state is updated immediately after calling -stop
+- Content types like `application/json; charset=utf-8`.
+- `errno` corruption by `LOG_ERROR()`.
+- `GCDWebServerParseURLEncodedForm` accepts empty values.
+- Connected state is updated immediately after `-stop`.
 
 ## [April 2014]
 
 ### Added
-- Added Travis CI integration
-- Added support for "multipart/mixed" parts inside "multipart/form-data"
-- Added HTMLFileUpload and HTMLForm unit tests
-- Added "htmlFileUpload" mode
-- GCDWebServerMIMEStreamParser class
-- Added -webServerDidCompleteBonjourRegistration:
-- Added -logException: API
-- Added support for digest authentication
-- Added support for Basic Authentication
-- Added -preflightRequest: and -overrideResponse:forRequest: APIs
-- Added GCDWebServerErrorResponse
-- Added logging APIs
-- Added -hasByteRange API
-- Added GCDWebServerHTTPStatusCodes.h
-- Added -abortRequest:withStatusCode: API
-- Added support for "ETag" and "If-None-Match" headers
-- Added support for "If-Modified-Since" and "Accept-Encoding" headers
-- Added support for "Last-Modified" response header
-- Added support for chunked transfer encoding in request bodies
-- Added support for gzip body encoding
-- GCDWebServerBodyWriter protocol
-- Added GCDWebServerChunkedResponse
-- Added support for moving files
-- Added GCDWebUploader
-- GCDWebServerEscapeURLString()
-- JSON support to GCDWebServerDataResponse
-- Added Drag & Drop browser file upload demo
-- HTTP range requests support
-- Exposed hooks to monitor bytes read and written
-- Added video streaming unit test
+- Travis CI integration.
+- `multipart/mixed` parts inside `multipart/form-data`.
+- `htmlFileUpload` mode and `GCDWebServerMIMEStreamParser`.
+- Bonjour completion delegate callback.
+- Basic and digest authentication.
+- `preflightRequest:` and `overrideResponse:forRequest:` APIs.
+- `GCDWebServerErrorResponse` and logging APIs.
+- `hasByteRange` API.
+- `GCDWebServerHTTPStatusCodes.h`.
+- `abortRequest:withStatusCode:` API.
+- `ETag`, `If-None-Match`, `If-Modified-Since`, `Accept-Encoding`, and `Last-Modified` header support.
+- Chunked transfer encoding for request bodies and gzip body encoding.
+- `GCDWebServerChunkedResponse` and `GCDWebServerBodyWriter` protocol.
+- File move support.
+- `GCDWebUploader` with drag-and-drop browser uploads.
+- JSON support on `GCDWebServerDataResponse`.
+- HTTP range request support.
+- Hooks for monitoring bytes read and written.
 
 ### Changed
-- Modified GCDWebServerMultiPart to allow duplicate control names
-- Exclude GCDWebServerPrivate.h from Podspec
-- Allow multiple user accounts for authentication
-- Cleaned up authentication options
-- Updated run APIs to use options
-- Added support for background mode on iOS
-- Replaced GCDWebServer subclassing with explicit options
-- Added connected state to GCDWebServer
-- Added GCDWebServerDelegate
-- Added +[GCDWebServer maxPendingConnections]
-- Changed -[GCDWebServerConnection open] to return a BOOL
-- Organized source code in subfolders
-- Moved functions to GCDWebServerFunctions.[h/m]
-- First pass at implementing class 1 WebDAV server
-- Automatically handle ETag and Last-Modified-Date caching
-- Automatically map HEAD requests to GET ones
-- Added -replaceResponse:forRequest: hook
-- Renamed GCDWebServerStreamResponse to GCDWebServerStreamingResponse
-- Moved response body chunked transfer encoding to GCDWebServerConnection
-- Split class files
-- Updated to "instancetype" type
-- Expose local and remote address on GCDWebServerConnection
-- GCDWebServerGetMimeTypeForExtension() always returns a MIME type
-- Allow customizing content type for JSON responses
-- Exposed internal utility functions
-- Updated handlers convenience API
-- Enable -Weverything for Debug builds
-- Updated API to expose range requests support
-- Renamed "class" method arguments to "aClass" for C++ compatibility
-- Updated to Xcode 5.1
+- Allow duplicate control names in `GCDWebServerMultiPart`.
+- Multiple user accounts for authentication.
+- Replaced subclassing with explicit options.
+- Background mode support on iOS.
+- Added `GCDWebServerDelegate`.
+- Auto-handle `ETag` and `Last-Modified-Date` caching; auto-map HEAD requests to GET.
+- First pass at a class 1 WebDAV server.
 
 ### Fixed
-- Unit tests finalized and expanded
-- Allow non-ISO Latin 1 file names when downloading files
-- Fixed parsing of 'multipart/form-data' with non-ASCII headers
-- Fixed unit tests to work in any time zone
-- Fixed source folder name typo
-- Make header parsing more robust
-- Don't cache GCDWebServerDataResponse
-- Fixed linking issues with Podspec
-- Static analyzer warning fix for unused variables when logging disabled
-- Fixed memory corruption under non-ARC
-- Fixed memory leak
-- Improved CocoaPods integration
-- Optimized logging
-- Allow HEAD requests on collections
-- Moved +shouldAutomaticallyMapHEADToGET to GCDWebServer class
-- Cleaned up file servers error handling
-- Added -description methods
-- Only set "Cache-Control" on successful responses
-- Fixed memory corruption
-- Properly handle casing of header values
-- Fix non-ARC build failure
-- Fixed addDefaultHandlerForMethod:requestClass:processBlock: ignoring method
-- Enable -Wshadow
-- Fixed warning regarding shadowing local variables
-- Enforce Content-Type and Content-Length consistency on requests
-- Fixed rare exception
+- Many parsing, memory, and logging fixes; see the original commits for details.
 
 ## [March 2014]
 
 ### Changed
-- Changed default port to 80 on iOS but still 8080 on Mac & iOS Simulator
-- Disable -runWithPort: on iOS
-- Move ivars to class extensions
-- Enabled -Wshorten-64-to-32
-- Moved logging message function to GCDWebServer.m
-- Switched to standard architectures on iOS
+- Default port is now 80 on iOS, 8080 on Mac and the iOS Simulator.
+- Disabled `runWithPort:` on iOS.
 
 ## [February 2014]
 
-### Changed
-- Updated copyright year
-
 ### Fixed
-- Fixed more build warnings
+- Additional build warnings.
 
 ## [January 2014]
 
 ### Added
-- Added ARC support
-- Added bonjourName property
-- Added podspec for version 1.2
+- ARC support.
+- `bonjourName` property.
 
 ### Changed
-- Updated for arm64
-- Removed podspec file (moved to CocoaPods repo)
-- Log to stderr instead of stdout
-- Don't use deprecated dispatch_get_current_queue()
-- Don't use dispatch_release() under ARC in OS X 10.8 or iOS 6.0 and later
-- Check for main thread only during first +initialize call
-
-### Fixed
-- Make sure @bonjourName is not an empty string
-
-## [December 2013]
-
-### Changed
-- Cleaned up .gitignore
-- Fixed copyrights and placeholders
+- Updated for arm64.
+- Log to stderr instead of stdout.
 
 ## [October 2013]
 
 ### Changed
-- Updated to Xcode 5.0
+- Updated to Xcode 5.0.
 
 ## [April 2013]
 
 ### Changed
-- Removed dependency on CFSocket to be 100% GCD based
-
-### Fixed
-- Small fixes
+- Removed `CFSocket` dependency for a fully GCD-based implementation.
 
 ## [March 2013]
 
 ### Fixed
-- Fixed headers not being parsed properly when not received all at once
-- Removed unnecessary NSAssert
-- Fixed double space typo
-- Improved handling of port 0
+- Headers parsed correctly when not received all at once.
+- Improved handling of port 0.
 
 ## [December 2012]
 
 ### Added
-- Initial public release
-- Added test cases
-- Moved GCDWebServerConnection to its own source files
-- Updated Xcode project for Mac & iOS
-
-### Changed
-- Initial import of GCDWebServer
+- Initial public release.
