@@ -20,17 +20,13 @@ struct DZWebUploaderTests {
 
     // MARK: - Helpers
 
-    /// Creates a temporary upload directory with a unique name and returns
-    /// a DZWebUploader initialized with that directory. Throws via `#require`
-    /// if the bundle is not found (init returns nil).
     private func makeUploader() throws -> DZWebUploader {
         let dir = NSTemporaryDirectory() + "DZWebUploaderTests-\(UUID().uuidString)"
         try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
         return try #require(DZWebUploader(uploadDirectory: dir))
     }
 
-    /// Starts the given uploader on an ephemeral port bound to localhost.
-    /// Returns the base URL. The caller must call `server.stop()`.
+    /// The caller must call `server.stop()`.
     private func startUploader(_ uploader: DZWebUploader) throws -> URL {
         let options: [String: Any] = [
             DZWebServerOption_Port: 0,
@@ -40,7 +36,6 @@ struct DZWebUploaderTests {
         return try #require(uploader.serverURL)
     }
 
-    /// Sends a synchronous GET request and returns the data and HTTP response.
     private func sendGET(to url: URL) async throws -> (Data, HTTPURLResponse) {
         let request = URLRequest(url: url)
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -48,7 +43,6 @@ struct DZWebUploaderTests {
         return (data, httpResponse)
     }
 
-    /// Sends a synchronous POST request with the given body and content type.
     private func sendPOST(
         to url: URL,
         body: Data,
@@ -65,7 +59,6 @@ struct DZWebUploaderTests {
         return (data, httpResponse)
     }
 
-    /// Sends a POST with `application/x-www-form-urlencoded` body.
     private func sendFormPOST(
         to url: URL,
         formBody: String
@@ -79,7 +72,6 @@ struct DZWebUploaderTests {
         )
     }
 
-    /// Sends a multipart/form-data POST to upload a file.
     private func sendMultipartUpload(
         to url: URL,
         path: String,
@@ -113,7 +105,6 @@ struct DZWebUploaderTests {
         return (data, httpResponse)
     }
 
-    /// Removes a temporary upload directory and all its contents.
     private func cleanupDirectory(_ path: String) {
         try? FileManager.default.removeItem(atPath: path)
     }

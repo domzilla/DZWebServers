@@ -12,9 +12,7 @@ import Testing
 
 // MARK: - Request Capture
 
-/// Thread-safe container for capturing request properties from a server handler.
-/// The handler runs on a GCD thread, so we need `@unchecked Sendable` to safely
-/// pass this into the closure and read from the test thread after the request completes.
+/// The handler runs on a GCD thread, hence `@unchecked Sendable`.
 private final class RequestCapture: @unchecked Sendable {
     var data: Data?
     var text: String?
@@ -27,11 +25,7 @@ private final class RequestCapture: @unchecked Sendable {
 
 // MARK: - Helper
 
-/// Creates a started `DZWebServer` bound to localhost on a random port, registers
-/// a POST handler at the given path that captures request properties, and returns
-/// the server, its base URL, and the capture object.
-///
-/// The caller is responsible for calling `server.stop()` when done.
+/// The caller must call `server.stop()`.
 private func makeServerCapturingDataRequest(
     path: String = "/data"
 ) throws
@@ -77,8 +71,6 @@ private func makeServerCapturingDataRequest(
     return (server, baseURL, capture)
 }
 
-/// Sends a POST request to the given URL with the specified body and content type,
-/// waits for the response, and returns the response data.
 @discardableResult
 private func sendPOST(
     to url: URL,

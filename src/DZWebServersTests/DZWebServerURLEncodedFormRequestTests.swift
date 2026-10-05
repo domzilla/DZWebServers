@@ -12,7 +12,6 @@ import Testing
 
 // MARK: - Sendable Capture Helper
 
-/// Thread-safe container used to capture request properties inside server handler blocks.
 private final class RequestCapture: @unchecked Sendable {
     var arguments: [String: String]?
     var rawData: Data?
@@ -25,8 +24,7 @@ private final class RequestCapture: @unchecked Sendable {
 
 // MARK: - Server Helpers
 
-/// Creates a `DZWebServer` bound to localhost on a random port with the given handler,
-/// starts it, and returns the server. The caller is responsible for calling `stop()`.
+/// The caller must call `stop()`.
 private func makeFormServer(
     path: String = "/form",
     handler: @escaping (DZWebServerURLEncodedFormRequest) -> DZWebServerResponse?
@@ -50,7 +48,6 @@ private func makeFormServer(
     return server
 }
 
-/// Sends a POST request with the given URL-encoded body string to the server.
 private func sendFormRequest(
     to server: DZWebServer,
     path: String = "/form",

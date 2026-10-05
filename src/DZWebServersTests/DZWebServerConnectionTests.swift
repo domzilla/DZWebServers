@@ -12,14 +12,12 @@ import Testing
 
 // MARK: - Helpers
 
-/// Options dictionary that starts the server on a random available port bound to localhost.
 private let localhostOptions: [String: Any] = [
     DZWebServerOption_Port: 0,
     DZWebServerOption_BindToLocalhost: true,
 ]
 
-/// Creates a `DZWebServer`, registers the given handlers, starts it on localhost,
-/// and returns the server. The caller is responsible for calling `stop()`.
+/// The caller must call `stop()`.
 private func makeRunningServer(
     handlers: (DZWebServer) -> Void = { _ in },
     options: [String: Any] = localhostOptions

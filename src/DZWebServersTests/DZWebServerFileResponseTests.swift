@@ -12,8 +12,7 @@ import Testing
 
 // MARK: - Test Helpers
 
-/// Creates a unique temporary directory and returns its path.
-/// The caller is responsible for cleaning up via `removeTestDirectory(_:)`.
+/// The caller must clean up via `removeTestDirectory(_:)`.
 private func makeTestDirectory() throws -> String {
     let basePath = NSTemporaryDirectory() as NSString
     let dirName = "DZWebServerFileResponseTests-\(UUID().uuidString)"
@@ -26,12 +25,10 @@ private func makeTestDirectory() throws -> String {
     return dirPath
 }
 
-/// Removes the temporary directory and all its contents.
 private func removeTestDirectory(_ path: String) {
     try? FileManager.default.removeItem(atPath: path)
 }
 
-/// Writes a file with the given content into the specified directory and returns the full path.
 @discardableResult
 private func writeTestFile(
     named fileName: String,
@@ -45,7 +42,6 @@ private func writeTestFile(
     return filePath
 }
 
-/// Generates `count` bytes of repeating ASCII content.
 private func makeTestData(byteCount count: Int) -> Data {
     guard count > 0 else { return Data() }
     let pattern: [UInt8] = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\n".utf8)
