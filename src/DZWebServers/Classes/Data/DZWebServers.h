@@ -70,10 +70,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-//! Project version number for BGFoundation.
+/** Project version number for DZWebServers. */
 FOUNDATION_EXPORT double DZWebServersVersionNumber;
 
-//! Project version string for BGFoundation.
+/** Project version string for DZWebServers. */
 FOUNDATION_EXPORT const unsigned char DZWebServersVersionString[];
 
 NS_ASSUME_NONNULL_END

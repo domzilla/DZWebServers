@@ -8,25 +8,9 @@
 
 @import DZWebServers;
 
-/// Forces DZWebServer +initialize to run on the main thread at module-load
-/// time, before any Swift Testing tests execute.
-///
-/// DZWebServerInitializeFunctions() asserts [NSThread isMainThread] in
-/// DEBUG builds (via DWS_DCHECK). Since Swift Testing runs tests on
-/// background threads, the first DZWebServer allocation inside a test
-/// would trigger +initialize on a background thread, hitting the
-/// assertion and calling abort().
-///
-/// By referencing the DZWebServer class and its subclasses inside +load
-/// (which the ObjC runtime always dispatches on the main thread during
-/// binary loading), we guarantee that +initialize fires on the main
-/// thread before the test runner reaches any test case.
-///
-/// Note: The ObjC runtime calls +initialize once *per class*. If a
-/// subclass does not override +initialize, the superclass implementation
-/// is invoked again for that subclass. So we must reference every
-/// DZWebServer subclass here to avoid a deferred +initialize call on a
-/// background thread later.
+// Forces DZWebServer +initialize onto the main thread via +load: it asserts isMainThread in DEBUG,
+// but Swift Testing runs tests on background threads. +initialize runs once per class, so every
+// subclass must be referenced here.
 @interface DZTestBootstrap : NSObject
 @end
 

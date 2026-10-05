@@ -28,9 +28,7 @@
 #import <os/object.h>
 #import <sys/socket.h>
 
-/**
- *  All DZWebServer headers.
- */
+// All DZWebServer headers.
 
 #import "DZWebServerHTTPStatusCodes.h"
 #import "DZWebServerFunctions.h"
@@ -48,9 +46,7 @@
 #import "DZWebServerFileResponse.h"
 #import "DZWebServerStreamedResponse.h"
 
-/**
- *  Check if a custom logging facility should be used instead.
- */
+// Check if a custom logging facility should be used instead.
 
 #if defined(__DZWEBSERVER_LOGGING_HEADER__)
 
@@ -58,10 +54,7 @@
 
 #import __DZWEBSERVER_LOGGING_HEADER__
 
-/**
- *  Automatically detect if XLFacility is available and if so use it as a
- *  logging facility.
- */
+// Automatically detect if XLFacility is available and if so use it as a logging facility.
 
 #elif defined(__has_include) && __has_include("XLFacilityMacros.h")
 
@@ -81,10 +74,7 @@
 #define DWS_DCHECK(__CONDITION__) XLOG_DEBUG_CHECK(__CONDITION__)
 #define DWS_DNOT_REACHED() XLOG_DEBUG_UNREACHABLE()
 
-/**
- *  If all of the above fail, then use DZWebServer built-in
- *  logging facility.
- */
+// If all of the above fail, then use DZWebServer built-in logging facility.
 
 #else
 
@@ -128,9 +118,7 @@ extern void DZWebServerLogMessage(DZWebServerLoggingLevel level, NSString* _Nonn
 
 #endif
 
-/**
- *  Consistency check macros used when building Debug only.
- */
+// Consistency check macros used when building Debug only.
 
 #if !defined(DWS_DCHECK) || !defined(DWS_DNOT_REACHED)
 
@@ -155,9 +143,7 @@ extern void DZWebServerLogMessage(DZWebServerLoggingLevel level, NSString* _Nonn
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- *  DZWebServer internal constants and APIs.
- */
+// DZWebServer internal constants and APIs.
 
 #define kDZWebServerDefaultMimeType @"application/octet-stream"
 #define kDZWebServerErrorDomain @"DZWebServerErrorDomain"

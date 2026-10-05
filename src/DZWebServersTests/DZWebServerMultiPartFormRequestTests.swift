@@ -20,7 +20,6 @@ struct DZWebServerMultiPartFormRequestTests {
 
     // MARK: - Helpers
 
-    /// Thread-safe capture container for extracting request properties inside a server handler.
     private final class RequestCapture: @unchecked Sendable {
         var arguments: [DZWebServerMultiPartArgument]?
         var files: [DZWebServerMultiPartFile]?
@@ -32,7 +31,6 @@ struct DZWebServerMultiPartFormRequestTests {
         var fileData: [String: Data] = [:]
     }
 
-    /// Constructs a raw multipart/form-data body from the given text fields and file parts.
     private static func createMultipartBody(
         boundary: String,
         fields: [(name: String, value: String)],
@@ -62,8 +60,6 @@ struct DZWebServerMultiPartFormRequestTests {
         return body
     }
 
-    /// Starts a server with a multipart handler, sends a POST request with the given body,
-    /// waits for the response, then stops the server. Returns the capture object.
     private static func performMultipartRequest(
         boundary: String,
         body: Data,

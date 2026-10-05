@@ -20,8 +20,6 @@ struct DZWebDAVServerTests {
 
     // MARK: - Helpers
 
-    /// Creates a DZWebDAVServer with a unique temporary upload directory, starts it on
-    /// an ephemeral localhost port, and returns the server, base URL, and upload directory path.
     private func makeServer() throws -> (DZWebDAVServer, URL, String) {
         let dir = NSTemporaryDirectory() + "DZWebDAVServerTests-\(UUID().uuidString)"
         try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
@@ -35,12 +33,10 @@ struct DZWebDAVServerTests {
         return (server, baseURL, dir)
     }
 
-    /// Creates a DZWebDAVServer with custom configuration (not started).
     private func makeConfiguredServer(dir: String) -> DZWebDAVServer {
         DZWebDAVServer(uploadDirectory: dir)
     }
 
-    /// Sends an HTTP request with the given method, optional body, and optional headers.
     private func sendRequest(
         method: String,
         url: URL,
@@ -60,7 +56,6 @@ struct DZWebDAVServerTests {
         return (httpResponse.statusCode, data, httpResponse)
     }
 
-    /// Writes a file with the given content at a path relative to the upload directory.
     @discardableResult
     private func writeFile(
         named name: String,
@@ -78,7 +73,6 @@ struct DZWebDAVServerTests {
         return path
     }
 
-    /// Creates a subdirectory inside the upload directory.
     @discardableResult
     private func createSubdirectory(
         named name: String,
@@ -1116,7 +1110,6 @@ struct DZWebDAVServerTests {
     struct FileExtensionsFilter {
         private let parent = DZWebDAVServerTests()
 
-        /// Creates a server with allowedFileExtensions configured and started.
         private func makeFilteredServer(
             extensions: [String],
             dir: String
@@ -1279,7 +1272,6 @@ struct DZWebDAVServerTests {
     struct HiddenItems {
         private let parent = DZWebDAVServerTests()
 
-        /// Creates a server with allowHiddenItems configured and started.
         private func makeHiddenItemsServer(
             allowHidden: Bool,
             dir: String

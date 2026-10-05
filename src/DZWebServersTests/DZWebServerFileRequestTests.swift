@@ -12,7 +12,6 @@ import Testing
 
 // MARK: - Sendable Capture Helper
 
-/// Thread-safe container for capturing request properties inside a handler block.
 private final class FileRequestCapture: @unchecked Sendable {
     var temporaryPath: String?
     var fileContents: Data?
@@ -25,8 +24,6 @@ private final class FileRequestCapture: @unchecked Sendable {
 
 // MARK: - Server Helpers
 
-/// Starts a local DZWebServer bound to localhost on an ephemeral port and registers
-/// a POST handler at the given path that captures file request properties.
 private func makeFileServer(
     handlerPath: String = "/upload",
     capture: FileRequestCapture = FileRequestCapture()
@@ -66,7 +63,6 @@ private func makeFileServer(
     return (server, capture, endpointURL)
 }
 
-/// Sends a POST request with the given body data and content type.
 private func sendFilePost(
     to url: URL,
     body: Data,

@@ -12,14 +12,12 @@ import Testing
 
 // MARK: - Helper
 
-/// Standard options for starting a localhost-only test server on an ephemeral port.
 private let localhostOptions: [String: Any] = [
     DZWebServerOption_Port: 0,
     DZWebServerOption_BindToLocalhost: true,
     DZWebServerOption_AutomaticallyMapHEADToGET: true,
 ]
 
-/// Creates a URLRequest with the given HTTP method targeting a path on the server.
 private func request(
     for server: DZWebServer,
     method: String = "GET",
@@ -39,7 +37,6 @@ private func request(
     return request
 }
 
-/// URLSession configured to skip caches and redirects for deterministic test behavior.
 private let testSession: URLSession = {
     let config = URLSessionConfiguration.ephemeral
     config.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
@@ -1344,8 +1341,6 @@ struct DZWebServerTests {
 
 // MARK: - Synchronous Helpers
 
-/// Synchronously performs a URLSession data task and returns the result.
-/// Uses a semaphore to bridge async URLSession to synchronous test code.
 private func awaitData(
     from url: URL,
     session: URLSession = testSession
@@ -1355,7 +1350,6 @@ private func awaitData(
     try awaitData(for: URLRequest(url: url), session: session)
 }
 
-/// Synchronously performs a URLSession data task with a custom request.
 private func awaitData(
     for request: URLRequest,
     session: URLSession = testSession
@@ -1398,7 +1392,6 @@ private func awaitData(
 
 // MARK: - Test Helpers
 
-/// Simple delegate for testing DZWebServerDelegate callbacks.
 private final class TestServerDelegate: NSObject, DZWebServerDelegate {
     var didStartCalled = false
     var didStopCalled = false
@@ -1422,7 +1415,6 @@ private final class TestServerDelegate: NSObject, DZWebServerDelegate {
     }
 }
 
-/// URLSession delegate that provides credentials for Digest authentication challenges.
 private final class DigestAuthDelegate: NSObject, URLSessionTaskDelegate {
     let user: String
     let password: String

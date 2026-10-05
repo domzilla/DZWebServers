@@ -53,7 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface DZWebServerErrorResponse : DZWebServerDataResponse
 
 // ---------------------------------------------------------------------------
-/// @name Factory Methods -- Client Errors (4xx)
+/** @name Factory Methods -- Client Errors (4xx) */
 // ---------------------------------------------------------------------------
 
 /**
@@ -122,7 +122,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)responseWithClientError:(DZWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError formattedMessage:(NSString*)message;
 
 // ---------------------------------------------------------------------------
-/// @name Factory Methods -- Server Errors (5xx)
+/** @name Factory Methods -- Server Errors (5xx) */
 // ---------------------------------------------------------------------------
 
 /**
@@ -191,7 +191,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)responseWithServerError:(DZWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(nullable NSError*)underlyingError formattedMessage:(NSString*)message;
 
 // ---------------------------------------------------------------------------
-/// @name Initializers -- Client Errors (4xx)
+/** @name Initializers -- Client Errors (4xx) */
 // ---------------------------------------------------------------------------
 
 /**
@@ -262,7 +262,7 @@ NS_ASSUME_NONNULL_BEGIN
     NS_SWIFT_NAME(init(clientError:underlyingError:message:));
 
 // ---------------------------------------------------------------------------
-/// @name Initializers -- Server Errors (5xx)
+/** @name Initializers -- Server Errors (5xx) */
 // ---------------------------------------------------------------------------
 
 /**

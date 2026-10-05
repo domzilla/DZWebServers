@@ -275,7 +275,6 @@ struct DZWebServerDataResponseTests {
 
     @Suite("HTML template response (Extensions)")
     struct HTMLTemplateResponse {
-        /// Creates a temporary directory for template tests and returns its URL.
         private func makeTempDirectory() throws -> URL {
             let tempDir = FileManager.default.temporaryDirectory
                 .appendingPathComponent("DZWebServerDataResponseTests-\(UUID().uuidString)")
@@ -283,7 +282,6 @@ struct DZWebServerDataResponseTests {
             return tempDir
         }
 
-        /// Removes the temporary directory at the given URL.
         private func removeTempDirectory(_ url: URL) {
             try? FileManager.default.removeItem(at: url)
         }

@@ -12,7 +12,6 @@ import Testing
 
 // MARK: - Helpers
 
-/// Thread-safe box for capturing request properties from handler blocks.
 private final class CapturedRequest: @unchecked Sendable {
     private let lock = NSLock()
     private var _value: DZWebServerRequest?
@@ -29,7 +28,6 @@ private final class CapturedRequest: @unchecked Sendable {
     }
 }
 
-/// Creates a minimal `DZWebServerRequest` with the given method, path, query, and headers.
 private func makeRequest(
     method: String = "GET",
     urlString: String = "http://localhost/test",
