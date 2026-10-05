@@ -656,7 +656,8 @@ struct DZWebServerFunctionsTests {
             #expect(parsedISO8601 != nil)
 
             // Both should represent the same instant
-            let difference = try abs(#require(parsedRFC822?.timeIntervalSince(#require(parsedISO8601))))
+            let iso8601Date = try #require(parsedISO8601)
+            let difference = try abs(#require(parsedRFC822?.timeIntervalSince(iso8601Date)))
             #expect(difference < 1.0, "RFC 822 and ISO 8601 parsed dates differ by \(difference) seconds")
         }
     }
