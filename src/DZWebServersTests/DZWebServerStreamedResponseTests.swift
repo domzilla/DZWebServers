@@ -396,7 +396,7 @@ struct DZWebServerStreamedResponseTests {
                 streamBlock: { _ in Data() }
             )
 
-            #expect(response is DZWebServerResponse)
+            #expect(response.isKind(of: DZWebServerResponse.self))
         }
     }
 }

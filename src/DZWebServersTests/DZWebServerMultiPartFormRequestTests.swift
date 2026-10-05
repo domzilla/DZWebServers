@@ -76,8 +76,8 @@ struct DZWebServerMultiPartFormRequestTests {
         ) { request -> DZWebServerResponse? in
             let multipartRequest = request as! DZWebServerMultiPartFormRequest
 
-            capture.arguments = multipartRequest.arguments as? [DZWebServerMultiPartArgument]
-            capture.files = multipartRequest.files as? [DZWebServerMultiPartFile]
+            capture.arguments = multipartRequest.arguments
+            capture.files = multipartRequest.files
 
             // Capture control names in order
             if let args = capture.arguments {
@@ -650,7 +650,7 @@ struct DZWebServerMultiPartFormRequestTests {
                 let multipartRequest = request as! DZWebServerMultiPartFormRequest
                 firstTagValue = multipartRequest.firstArgument(forControlName: "tag")?.string
 
-                let allArgs = multipartRequest.arguments as? [DZWebServerMultiPartArgument] ?? []
+                let allArgs = multipartRequest.arguments
                 totalTagCount = allArgs.filter { $0.controlName == "tag" }.count
 
                 return DZWebServerDataResponse(text: "OK")
@@ -793,8 +793,7 @@ struct DZWebServerMultiPartFormRequestTests {
                 request: DZWebServerMultiPartFormRequest.self
             ) { request -> DZWebServerResponse? in
                 let multipartRequest = request as! DZWebServerMultiPartFormRequest
-                capturedContentType = (multipartRequest.arguments as? [DZWebServerMultiPartArgument])?.first?
-                    .contentType
+                capturedContentType = multipartRequest.arguments.first?.contentType
                 return DZWebServerDataResponse(text: "OK")
             }
 
@@ -832,7 +831,7 @@ struct DZWebServerMultiPartFormRequestTests {
                 request: DZWebServerMultiPartFormRequest.self
             ) { request -> DZWebServerResponse? in
                 let multipartRequest = request as! DZWebServerMultiPartFormRequest
-                capturedMimeType = (multipartRequest.files as? [DZWebServerMultiPartFile])?.first?.mimeType
+                capturedMimeType = multipartRequest.files.first?.mimeType
                 return DZWebServerDataResponse(text: "OK")
             }
 
@@ -878,7 +877,7 @@ struct DZWebServerMultiPartFormRequestTests {
                 request: DZWebServerMultiPartFormRequest.self
             ) { request -> DZWebServerResponse? in
                 let multipartRequest = request as! DZWebServerMultiPartFormRequest
-                let file = (multipartRequest.files as? [DZWebServerMultiPartFile])?.first
+                let file = multipartRequest.files.first
                 capturedContentType = file?.contentType
                 capturedMimeType = file?.mimeType
                 return DZWebServerDataResponse(text: "OK")
@@ -1077,7 +1076,7 @@ struct DZWebServerMultiPartFormRequestTests {
                 request: DZWebServerMultiPartFormRequest.self
             ) { request -> DZWebServerResponse? in
                 let multipartRequest = request as! DZWebServerMultiPartFormRequest
-                let arg = (multipartRequest.arguments as? [DZWebServerMultiPartArgument])?.first
+                let arg = multipartRequest.arguments.first
                 capturedString = arg?.string
                 capturedData = arg?.data
                 return DZWebServerDataResponse(text: "OK")
@@ -1126,7 +1125,7 @@ struct DZWebServerMultiPartFormRequestTests {
                 let multipartRequest = request as! DZWebServerMultiPartFormRequest
                 firstFileName = multipartRequest.firstFile(forControlName: "attachment")?.fileName
 
-                let allFiles = multipartRequest.files as? [DZWebServerMultiPartFile] ?? []
+                let allFiles = multipartRequest.files
                 totalFileCount = allFiles.filter { $0.controlName == "attachment" }.count
 
                 return DZWebServerDataResponse(text: "OK")

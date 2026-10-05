@@ -470,7 +470,7 @@ struct DZWebServerConnectionTests {
                 path: "/search",
                 request: DZWebServerRequest.self
             ) { request in
-                capturedQuery = request.query as? [String: String]
+                capturedQuery = request.query
                 return DZWebServerDataResponse(text: "OK")
             }
             try server.start(options: localhostOptions)
@@ -499,7 +499,7 @@ struct DZWebServerConnectionTests {
                 path: "/headers",
                 request: DZWebServerRequest.self
             ) { request in
-                capturedHeaders = request.headers as? [String: String]
+                capturedHeaders = request.headers
                 return DZWebServerDataResponse(text: "OK")
             }
             try server.start(options: localhostOptions)

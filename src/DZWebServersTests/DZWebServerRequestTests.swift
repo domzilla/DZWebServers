@@ -73,7 +73,8 @@ struct DZWebServerRequestTests {
                 query: query
             )
 
-            #expect(request != nil)
+            #expect(request.method == "GET")
+            #expect(request.url == url)
         }
 
         @Test("Initializer with empty headers and nil query creates a valid request")
@@ -349,7 +350,7 @@ struct DZWebServerRequestTests {
 
             // 1994-11-06 08:49:37 UTC = 784111777 seconds since 1970
             let calendar = Calendar(identifier: .gregorian)
-            var components = try calendar.dateComponents(in: #require(TimeZone(identifier: "UTC")), from: date)
+            let components = try calendar.dateComponents(in: #require(TimeZone(identifier: "UTC")), from: date)
             #expect(components.year == 1994)
             #expect(components.month == 11)
             #expect(components.day == 6)

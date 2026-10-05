@@ -682,7 +682,7 @@ struct InheritedPropertiesTests {
     func errorResponseIsSubclassOfDataResponse() {
         let response = DZWebServerErrorResponse(clientError: .httpStatusCode_NotFound, message: "Not found")
         #expect(
-            response is DZWebServerDataResponse,
+            response.isKind(of: DZWebServerDataResponse.self),
             "DZWebServerErrorResponse should be a subclass of DZWebServerDataResponse"
         )
     }
@@ -691,7 +691,7 @@ struct InheritedPropertiesTests {
     func errorResponseIsSubclassOfResponse() {
         let response = DZWebServerErrorResponse(serverError: .httpStatusCode_InternalServerError, message: "Error")
         #expect(
-            response is DZWebServerResponse,
+            response.isKind(of: DZWebServerResponse.self),
             "DZWebServerErrorResponse should be a subclass of DZWebServerResponse"
         )
     }

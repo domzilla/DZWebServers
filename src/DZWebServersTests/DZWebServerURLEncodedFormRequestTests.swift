@@ -108,7 +108,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func singleKeyValuePairParsedCorrectly() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -124,7 +124,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func multipleKeyValuePairsParsedCorrectly() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -142,7 +142,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func keysAndValuesCorrectlyPaired() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -165,7 +165,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func percentEncodedValuesDecoded() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -180,7 +180,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func plusSignDecodedToSpace() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -194,7 +194,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func plusSignDecodedToSpaceInKeys() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -208,7 +208,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func encodedAmpersandInValueDoesNotSplit() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -224,7 +224,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func encodedEqualsInValueDoesNotSplit() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -240,7 +240,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func percentEncodedUnicodeDecoded() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -255,7 +255,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func cjkCharactersDecoded() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -279,7 +279,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func variousEncodedSpecialCharactersDecoded(body: String, key: String, expected: String) async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -298,7 +298,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func emptyFormBodyProducesEmptyArguments() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -314,7 +314,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func keyWithEmptyValue() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -329,7 +329,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func emptyKeyWithValue() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -345,7 +345,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func duplicateKeysResolveToLastValue() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -360,7 +360,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func keyWithSpacesEncodedAsPlus() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -374,7 +374,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func keyWithSpacesEncodedAsPercent20() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -388,7 +388,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func veryLongValuePreserved() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -405,7 +405,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func manyKeyValuePairsAllPreserved() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -425,7 +425,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func trailingAmpersandDoesNotCreateExtraEntry() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -440,7 +440,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func leadingAmpersandIncludedInFirstKey() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -459,7 +459,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func consecutiveAmpersandsIncludedInKeys() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -477,7 +477,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func valueContainingEqualsSignSplitsOnFirstOnly() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -492,7 +492,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func numericKeysAndValues() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -649,7 +649,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func multipleSequentialRequestsAreIndependent() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }
@@ -675,7 +675,7 @@ struct DZWebServerURLEncodedFormRequestTests {
         func allPrintableASCIIInValue() async throws {
             let capture = RequestCapture()
             let server = try makeFormServer { request in
-                capture.arguments = request.arguments as? [String: String]
+                capture.arguments = request.arguments
                 return DZWebServerDataResponse(text: "OK")
             }
             defer { server.stop() }

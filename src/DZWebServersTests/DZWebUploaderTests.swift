@@ -23,7 +23,7 @@ struct DZWebUploaderTests {
     private func makeUploader() throws -> DZWebUploader {
         let dir = NSTemporaryDirectory() + "DZWebUploaderTests-\(UUID().uuidString)"
         try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
-        return try #require(DZWebUploader(uploadDirectory: dir))
+        return DZWebUploader(uploadDirectory: dir)
     }
 
     /// The caller must call `server.stop()`.
@@ -201,7 +201,6 @@ struct DZWebUploaderTests {
             let uploader = try parent.makeUploader()
             defer { parent.cleanupDirectory(uploader.uploadDirectory) }
 
-            #expect(uploader.title != nil)
             #expect(uploader.title.isEmpty)
         }
 
@@ -210,7 +209,6 @@ struct DZWebUploaderTests {
             let uploader = try parent.makeUploader()
             defer { parent.cleanupDirectory(uploader.uploadDirectory) }
 
-            #expect(uploader.header != nil)
             #expect(uploader.header.isEmpty)
         }
 
@@ -219,7 +217,6 @@ struct DZWebUploaderTests {
             let uploader = try parent.makeUploader()
             defer { parent.cleanupDirectory(uploader.uploadDirectory) }
 
-            #expect(uploader.footer != nil)
             #expect(uploader.footer.isEmpty)
         }
 
@@ -228,7 +225,6 @@ struct DZWebUploaderTests {
             let uploader = try parent.makeUploader()
             defer { parent.cleanupDirectory(uploader.uploadDirectory) }
 
-            #expect(uploader.prologue != nil)
             #expect(uploader.prologue.isEmpty)
         }
 
@@ -371,7 +367,7 @@ struct DZWebUploaderTests {
 
             let html = String(data: data, encoding: .utf8)
             #expect(html != nil)
-            #expect(try #require(html?.contains("<html")))
+            #expect(try #require(html).contains("<html"))
         }
 
         @Test("GET / includes the custom title in the HTML")
@@ -472,7 +468,7 @@ struct DZWebUploaderTests {
 
             let json = try JSONSerialization.jsonObject(with: data) as? [[String: Any]]
             #expect(json != nil)
-            #expect(try #require(json?.isEmpty))
+            #expect(try #require(json).isEmpty)
         }
 
         @Test("GET /list returns files that exist in the upload directory")

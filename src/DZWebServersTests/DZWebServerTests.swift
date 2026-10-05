@@ -942,9 +942,6 @@ struct DZWebServerTests {
             // URLSession handles Digest authentication automatically when a
             // credential is provided via the delegate or a ProtectionSpace
             let url = try #require(server.serverURL?.appendingPathComponent("digest-protected"))
-            let protectedURL = try #require(URL(
-                string: "http://user:pass@localhost:\(server.port)/digest-protected"
-            ))
 
             // Use a custom session with a credential-providing delegate
             let delegate = DigestAuthDelegate(user: "user", password: "pass")
