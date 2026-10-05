@@ -9,10 +9,12 @@ Lightweight, GCD-based HTTP 1.1 server framework for embedding in iOS and macOS 
 - **Target-Platforms**: iOS / macOS
 
 ## Guides (MANDATORY)
-- Objective-C style: `~/Agents/Style/objc-style-guide.md`
-- Swift style: `~/Agents/Style/swift-swiftui-style-guide.md`
-- Accessibility: `~/Agents/Guides/accessibility-guide.md`
-- Xcode projects: `~/Agents/Guides/xcode-project-guide.md`
+Read `~/Agents/Guides/xcode-project-guide.md` in full before planning or editing anything.
+
+Read these in full before touching the matching code:
+- Swift style (`.swift`): `~/Agents/Style/swift-swiftui-style-guide.md`
+- Objective-C style (`.h`, `.m`): `~/Agents/Style/objc-style-guide.md`
+- Accessibility (UI code, XIBs, storyboards): `~/Agents/Guides/accessibility-guide.md`
 
 ## Framework Dependencies
 None. This framework depends only on Foundation and CoreServices (system frameworks).
