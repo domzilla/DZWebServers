@@ -6,868 +6,324 @@
 //  Copyright © 2026 Dominic Rodemer. All rights reserved.
 //
 
+import DZWebServers
 import Foundation
 import Testing
-@testable import DZWebServers
 
-// MARK: - Test Helpers
+// Nonexistent paths, directories and empty paths are not tested: the initializer hits
+// DWS_DNOT_REACHED(), which aborts in DEBUG builds.
 
-/// The caller must clean up via `removeTestDirectory(_:)`.
-private func makeTestDirectory() throws -> String {
-    let basePath = NSTemporaryDirectory() as NSString
-    let dirName = "DZWebServerFileResponseTests-\(UUID().uuidString)"
-    let dirPath = basePath.appendingPathComponent(dirName)
-    try FileManager.default.createDirectory(
-        atPath: dirPath,
-        withIntermediateDirectories: true,
-        attributes: nil
-    )
-    return dirPath
-}
+/// Temporary directory for one test's fixture files, removed when the suite instance is released.
+private final class FixtureDirectory {
+    let path: String
 
-private func removeTestDirectory(_ path: String) {
-    try? FileManager.default.removeItem(atPath: path)
-}
-
-@discardableResult
-private func writeTestFile(
-    named fileName: String,
-    content: Data,
-    inDirectory directory: String
-) throws
-    -> String
-{
-    let filePath = (directory as NSString).appendingPathComponent(fileName)
-    try content.write(to: URL(fileURLWithPath: filePath))
-    return filePath
-}
-
-private func makeTestData(byteCount count: Int) -> Data {
-    guard count > 0 else { return Data() }
-    let pattern: [UInt8] = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\n".utf8)
-    var bytes = [UInt8](repeating: 0, count: count)
-    for i in 0..<count {
-        bytes[i] = pattern[i % pattern.count]
-    }
-    return Data(bytes)
-}
-
-// MARK: - Basic File Response
-
-@Suite("DZWebServerFileResponse - Basic File Response", .serialized, .tags(.response, .fileIO, .properties))
-struct BasicFileResponseTests {
-    init() {
-        DZWebServerTestSetup.ensureInitialized()
+    init() throws {
+        self.path = try TestSupport.makeTemporaryDirectory(prefix: "DZWebServerFileResponseTests")
     }
 
-    @Test("Response for existing text file has correct status code 200")
-    func responseForExistingTextFileHasStatusCode200() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "hello.txt", content: Data("Hello, world!".utf8), inDirectory: dir)
-        let response = DZWebServerFileResponse(file: path)
-
-        #expect(response != nil, "Should create a response for a valid text file")
-        #expect(response?.statusCode == 200, "Status code should be 200 OK for a full file response")
+    deinit {
+        try? FileManager.default.removeItem(atPath: self.path)
     }
 
-    @Test("Response for existing text file has non-nil contentType, lastModifiedDate, and eTag")
-    func responseForExistingTextFileHasNonNilMetadataProperties() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "hello.txt", content: Data("Hello, world!".utf8), inDirectory: dir)
-        let response = try #require(DZWebServerFileResponse(file: path))
-
-        #expect(
-            response.contentType.isEmpty == false,
-            "contentType should be set for a valid file"
-        )
-        #expect(
-            response.lastModifiedDate.timeIntervalSince1970 > 0,
-            "lastModifiedDate should be a valid past/present date"
-        )
-        #expect(
-            response.eTag.isEmpty == false,
-            "eTag should be set for a valid file"
-        )
-    }
-
-    @Test("Response contentLength matches the actual file size")
-    func responseContentLengthMatchesActualFileSize() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let content = makeTestData(byteCount: 512)
-        let path = try writeTestFile(named: "data.bin", content: content, inDirectory: dir)
-        let response = try #require(DZWebServerFileResponse(file: path))
-
-        #expect(
-            response.contentLength == 512,
-            "contentLength should equal the file size in bytes"
-        )
-    }
-
-    @Test("Response hasBody returns true for a valid file")
-    func responseHasBodyReturnsTrueForValidFile() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "test.txt", content: Data("content".utf8), inDirectory: dir)
-        let response = try #require(DZWebServerFileResponse(file: path))
-
-        #expect(
-            response.hasBody() == true,
-            "hasBody should return true because contentType is non-nil"
-        )
-    }
-
-    @Test(
-        "Response resolves the correct MIME type for common file extensions",
-        arguments: [
-            ("page.html", "text/html"),
-            ("style.css", "text/css"),
-            ("app.js", "text/javascript"),
-            ("data.json", "application/json"),
-            ("image.png", "image/png"),
-            ("photo.jpg", "image/jpeg"),
-            ("document.pdf", "application/pdf"),
-        ] as [(String, String)]
-    )
-    func responseResolvesCorrectMIMETypeForCommonFileExtensions(
-        fileName: String,
-        expectedContentType: String
-    ) throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: fileName, content: Data("x".utf8), inDirectory: dir)
-        let response = DZWebServerFileResponse(file: path)
-
-        #expect(response != nil, "Should create a response for '\(fileName)'")
-        #expect(
-            response?.contentType == expectedContentType,
-            "Content type for '\(fileName)' should be '\(expectedContentType)' but got '\(response?.contentType ?? "nil")'"
-        )
+    func writeFile(named name: String, content: Data) throws -> String {
+        let path = (self.path as NSString).appendingPathComponent(name)
+        try content.write(to: URL(fileURLWithPath: path))
+        return path
     }
 }
 
-// NOTE: Non-existent file, empty path, and directory path tests are omitted.
-// DZWebServerFileResponse's init triggers DWS_DNOT_REACHED() → abort() in
-// DEBUG builds when lstat fails or the path does not point to a regular file.
-// These edge cases cannot be tested without crashing the test runner.
-
-// MARK: - Byte Range
-
-@Suite("DZWebServerFileResponse - Byte Range", .serialized, .tags(.response, .fileIO, .properties))
-struct ByteRangeResponseTests {
-    init() {
-        DZWebServerTestSetup.ensureInitialized()
-    }
-
-    @Test("Partial range from beginning sets status 206 and correct contentLength")
-    func partialRangeFromBeginningSetsStatus206AndCorrectContentLength() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let content = makeTestData(byteCount: 1000)
-        let path = try writeTestFile(named: "ranged.bin", content: content, inDirectory: dir)
-
-        // Request bytes 0-99 (100 bytes)
-        let range = NSRange(location: 0, length: 100)
-        let response = DZWebServerFileResponse(file: path, byteRange: range)
-
-        #expect(response != nil, "Should create a response for a valid partial range")
-        #expect(
-            response?.statusCode == 206,
-            "Status code should be 206 Partial Content for byte range requests"
-        )
-        #expect(
-            response?.contentLength == 100,
-            "contentLength should be 100 for a 100-byte range"
-        )
-    }
-
-    @Test("Suffix range serves the last N bytes with status 206")
-    func suffixRangeServesLastNBytesWithStatus206() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let content = makeTestData(byteCount: 1000)
-        let path = try writeTestFile(named: "suffix.bin", content: content, inDirectory: dir)
-
-        // Request last 100 bytes: NSMakeRange(NSUIntegerMax, 100)
-        let range = NSRange(location: Int(bitPattern: UInt.max), length: 100)
-        let response = DZWebServerFileResponse(file: path, byteRange: range)
-
-        #expect(response != nil, "Should create a response for a suffix byte range")
-        #expect(
-            response?.statusCode == 206,
-            "Status code should be 206 Partial Content for suffix range"
-        )
-        #expect(
-            response?.contentLength == 100,
-            "contentLength should be 100 for a 100-byte suffix range"
-        )
-    }
-
-    @Test("Full file range NSMakeRange(NSUIntegerMax, 0) serves entire file with status 200")
-    func fullFileRangeServesEntireFileWithStatus200() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let content = makeTestData(byteCount: 500)
-        let path = try writeTestFile(named: "full.bin", content: content, inDirectory: dir)
-
-        // NSMakeRange(NSUIntegerMax, 0) means "full file, no range restriction"
-        let range = NSRange(location: Int(bitPattern: UInt.max), length: 0)
-        let response = DZWebServerFileResponse(file: path, byteRange: range)
-
-        #expect(response != nil, "Should create a response for the full file range")
-        #expect(
-            response?.statusCode == 200,
-            "Status code should be 200 OK when serving the full file"
-        )
-        #expect(
-            response?.contentLength == 500,
-            "contentLength should equal the full file size"
-        )
-    }
-
-    @Test("Range exceeding file size is clamped to actual file size")
-    func rangeExceedingFileSizeIsClampedToActualFileSize() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let content = makeTestData(byteCount: 200)
-        let path = try writeTestFile(named: "small.bin", content: content, inDirectory: dir)
-
-        // Request bytes 0-999 but file is only 200 bytes
-        let range = NSRange(location: 0, length: 1000)
-        let response = DZWebServerFileResponse(file: path, byteRange: range)
-
-        #expect(response != nil, "Should create a response even when range exceeds file size")
-        #expect(
-            response?.contentLength == 200,
-            "contentLength should be clamped to the actual file size of 200 bytes"
-        )
-        #expect(
-            response?.statusCode == 206,
-            "Status code should still be 206 for a clamped byte range"
-        )
-    }
-
-    @Test("Range with offset beyond file size results in zero length and returns nil")
-    func rangeWithOffsetBeyondFileSizeReturnsNil() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let content = makeTestData(byteCount: 100)
-        let path = try writeTestFile(named: "tiny.bin", content: content, inDirectory: dir)
-
-        // Offset at file size means length is clamped to 0
-        let range = NSRange(location: 100, length: 50)
-        let response = DZWebServerFileResponse(file: path, byteRange: range)
-
-        #expect(
-            response == nil,
-            "Should return nil when the resolved byte range has zero length"
-        )
-    }
-
-    @Test("Suffix range larger than file size is clamped to entire file")
-    func suffixRangeLargerThanFileSizeIsClampedToEntireFile() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let content = makeTestData(byteCount: 50)
-        let path = try writeTestFile(named: "small2.bin", content: content, inDirectory: dir)
-
-        // Request last 9999 bytes but file is only 50 bytes
-        let range = NSRange(location: Int(bitPattern: UInt.max), length: 9999)
-        let response = DZWebServerFileResponse(file: path, byteRange: range)
-
-        #expect(response != nil, "Should create a response for an oversized suffix range")
-        #expect(
-            response?.contentLength == 50,
-            "contentLength should be clamped to the full file size of 50 bytes"
-        )
-    }
+/// Bytes `0, 1, 2, …` wrapping at 256, so every offset of a range is distinguishable.
+private func makeTestData(byteCount: Int) -> Data {
+    Data((0..<byteCount).map { UInt8(truncatingIfNeeded: $0) })
 }
 
-// MARK: - Attachment
-
-@Suite("DZWebServerFileResponse - Attachment", .serialized, .tags(.response, .properties))
-struct AttachmentResponseTests {
-    init() {
-        DZWebServerTestSetup.ensureInitialized()
-    }
-
-    @Test("Response with isAttachment true creates successfully")
-    func responseWithIsAttachmentTrueCreatesSuccessfully() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "download.zip", content: Data("fake zip".utf8), inDirectory: dir)
-        let response = DZWebServerFileResponse(file: path, isAttachment: true)
-
-        #expect(
-            response != nil,
-            "Should create a response with the attachment disposition flag set"
-        )
-        #expect(
-            response?.statusCode == 200,
-            "Attachment response should still have status code 200"
-        )
-    }
-
-    @Test("Response with isAttachment false creates successfully")
-    func responseWithIsAttachmentFalseCreatesSuccessfully() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "inline.txt", content: Data("inline content".utf8), inDirectory: dir)
-        let response = DZWebServerFileResponse(file: path, isAttachment: false)
-
-        #expect(
-            response != nil,
-            "Should create a response without the attachment disposition"
-        )
-    }
-
-    @Test("Attachment response with byte range combines both features")
-    func attachmentResponseWithByteRangeCombinesBothFeatures() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let content = makeTestData(byteCount: 500)
-        let path = try writeTestFile(named: "partial_download.bin", content: content, inDirectory: dir)
-
-        let range = NSRange(location: 0, length: 200)
-        let response = DZWebServerFileResponse(file: path, byteRange: range, isAttachment: true)
-
-        #expect(
-            response != nil,
-            "Should create a response combining byte range and attachment"
-        )
-        #expect(
-            response?.statusCode == 206,
-            "Should have status 206 for byte range even with attachment"
-        )
-        #expect(
-            response?.contentLength == 200,
-            "contentLength should reflect the byte range"
-        )
-    }
+/// `NSMakeRange(NSUIntegerMax, length)`: the framework's sentinel for "last `length` bytes";
+/// a length of 0 means the whole file without a range.
+private func suffixRange(length: Int) -> NSRange {
+    NSRange(location: Int(bitPattern: UInt.max), length: length)
 }
 
-// MARK: - MIME Type Overrides
-
-@Suite("DZWebServerFileResponse - MIME Type Overrides", .serialized, .tags(.response, .properties))
-struct MIMETypeOverrideTests {
-    init() {
-        DZWebServerTestSetup.ensureInitialized()
-    }
-
-    @Test("Custom MIME type override replaces the default for a given extension")
-    func customMIMETypeOverrideReplacesDefaultForExtension() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "data.txt", content: Data("override test".utf8), inDirectory: dir)
-        let overrides = ["txt": "application/custom"]
-
-        // Int(bitPattern: UInt.max) produces the bit pattern for NSUIntegerMax
-        // which the Obj-C designated initializer uses as the "full file" sentinel.
-        // NSNotFound (Int.max) has a different bit pattern and would be misinterpreted.
-        let fullRange = NSRange(location: Int(bitPattern: UInt.max), length: 0)
-        let response = DZWebServerFileResponse(
-            file: path,
-            byteRange: fullRange,
-            isAttachment: false,
-            mimeTypeOverrides: overrides
-        )
-
-        #expect(response != nil, "Should create a response with MIME type overrides")
-        #expect(
-            response?.contentType == "application/custom",
-            "contentType should reflect the override 'application/custom'"
-        )
-    }
-
-    @Test("Nil overrides dictionary uses default MIME type resolution")
-    func nilOverridesDictionaryUsesDefaultMIMETypeResolution() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "page.html", content: Data("<html></html>".utf8), inDirectory: dir)
-
-        // Int(bitPattern: UInt.max) produces the bit pattern for NSUIntegerMax
-        // which the Obj-C designated initializer uses as the "full file" sentinel.
-        // NSNotFound (Int.max) has a different bit pattern and would be misinterpreted.
-        let fullRange = NSRange(location: Int(bitPattern: UInt.max), length: 0)
-        let response = DZWebServerFileResponse(
-            file: path,
-            byteRange: fullRange,
-            isAttachment: false,
-            mimeTypeOverrides: nil
-        )
-
-        #expect(response != nil, "Should create a response with nil overrides")
-        #expect(
-            response?.contentType == "text/html",
-            "contentType should use default MIME resolution for .html files"
-        )
-    }
+/// `additionalHeaders` is declared in the framework's private header only.
+private func additionalHeaders(of response: DZWebServerResponse) -> [String: String] {
+    response.value(forKey: "additionalHeaders") as? [String: String] ?? [:]
 }
 
-// MARK: - ETag and LastModifiedDate
-
-@Suite("DZWebServerFileResponse - ETag and LastModifiedDate", .serialized, .tags(.response, .properties))
-struct ETagAndLastModifiedDateTests {
-    init() {
-        DZWebServerTestSetup.ensureInitialized()
-    }
-
-    @Test("eTag is a non-empty string for a valid file")
-    func eTagIsNonEmptyStringForValidFile() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "etag_test.txt", content: Data("etag".utf8), inDirectory: dir)
-        let response = try #require(DZWebServerFileResponse(file: path))
-
-        #expect(
-            response.eTag.isEmpty == false,
-            "eTag should be a non-empty string"
-        )
-    }
-
-    @Test("lastModifiedDate is set to a recent date for a freshly created file")
-    func lastModifiedDateIsRecentForFreshlyCreatedFile() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let beforeCreation = Date()
-        let path = try writeTestFile(named: "recent.txt", content: Data("recent".utf8), inDirectory: dir)
-        let response = try #require(DZWebServerFileResponse(file: path))
-
-        // The file was just created, so lastModifiedDate should be close to now
-        let timeDifference = response.lastModifiedDate.timeIntervalSince(beforeCreation)
-        #expect(
-            timeDifference >= -1.0 && timeDifference <= 5.0,
-            "lastModifiedDate should be within a few seconds of file creation time"
-        )
-    }
-
-    @Test("Two responses for the same unmodified file have identical eTags")
-    func twoResponsesForSameUnmodifiedFileHaveIdenticalETags() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "stable.txt", content: Data("stable content".utf8), inDirectory: dir)
-        let response1 = try #require(DZWebServerFileResponse(file: path))
-        let response2 = try #require(DZWebServerFileResponse(file: path))
-
-        #expect(
-            response1.eTag == response2.eTag,
-            "eTags for the same unmodified file should be identical"
-        )
-    }
-
-    @Test("eTag changes after modifying the file")
-    func eTagChangesAfterModifyingTheFile() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "mutable.txt", content: Data("version 1".utf8), inDirectory: dir)
-        let response1 = try #require(DZWebServerFileResponse(file: path))
-        let eTag1 = response1.eTag
-
-        // Wait briefly so the modification time changes
-        Thread.sleep(forTimeInterval: 1.1)
-
-        // Rewrite the file with different content
-        try Data("version 2 with more content".utf8).write(to: URL(fileURLWithPath: path))
-        let response2 = try #require(DZWebServerFileResponse(file: path))
-        let eTag2 = response2.eTag
-
-        #expect(
-            eTag1 != eTag2,
-            "eTag should change after the file is modified (eTag1: '\(eTag1)', eTag2: '\(eTag2)')"
-        )
-    }
-
-    @Test("Two responses for the same file have identical lastModifiedDate values")
-    func twoResponsesForSameFileHaveIdenticalLastModifiedDates() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "consistent.txt", content: Data("consistent".utf8), inDirectory: dir)
-        let response1 = try #require(DZWebServerFileResponse(file: path))
-        let response2 = try #require(DZWebServerFileResponse(file: path))
-
-        #expect(
-            response1.lastModifiedDate == response2.lastModifiedDate,
-            "lastModifiedDate should be identical for the same unmodified file"
-        )
-    }
-}
-
-// MARK: - Factory Methods
-
-@Suite("DZWebServerFileResponse - Factory Methods", .serialized, .tags(.response, .properties))
-struct FactoryMethodTests {
-    init() {
-        DZWebServerTestSetup.ensureInitialized()
-    }
-
-    @Test("responseWithFile creates the same response as initWithFile")
-    func responseWithFileCreatesSameResponseAsInitWithFile() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "factory.txt", content: Data("factory test".utf8), inDirectory: dir)
-        let factoryResponse = DZWebServerFileResponse(file: path)
-        let initResponse = DZWebServerFileResponse(file: path)
-
-        #expect(factoryResponse != nil, "Factory method should create a response")
-        #expect(initResponse != nil, "Init method should create a response")
-        #expect(factoryResponse?.contentType == initResponse?.contentType)
-        #expect(factoryResponse?.contentLength == initResponse?.contentLength)
-        #expect(factoryResponse?.statusCode == initResponse?.statusCode)
-        #expect(factoryResponse?.eTag == initResponse?.eTag)
-    }
-
-    @Test("responseWithFile isAttachment creates the same response as initWithFile isAttachment")
-    func responseWithFileIsAttachmentMatchesInitEquivalent() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "attach.txt", content: Data("attachment".utf8), inDirectory: dir)
-        let factoryResponse = DZWebServerFileResponse(file: path, isAttachment: true)
-        let initResponse = DZWebServerFileResponse(file: path, isAttachment: true)
-
-        #expect(factoryResponse != nil, "Factory method should create an attachment response")
-        #expect(initResponse != nil, "Init method should create an attachment response")
-        #expect(factoryResponse?.contentType == initResponse?.contentType)
-        #expect(factoryResponse?.contentLength == initResponse?.contentLength)
-    }
-
-    @Test("responseWithFile byteRange creates the same response as initWithFile byteRange")
-    func responseWithFileByteRangeMatchesInitEquivalent() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let content = makeTestData(byteCount: 500)
-        let path = try writeTestFile(named: "ranged_factory.bin", content: content, inDirectory: dir)
-        let range = NSRange(location: 10, length: 100)
-
-        let factoryResponse = DZWebServerFileResponse(file: path, byteRange: range)
-        let initResponse = DZWebServerFileResponse(file: path, byteRange: range)
-
-        #expect(factoryResponse != nil, "Factory method should create a byte range response")
-        #expect(initResponse != nil, "Init method should create a byte range response")
-        #expect(factoryResponse?.statusCode == initResponse?.statusCode)
-        #expect(factoryResponse?.contentLength == initResponse?.contentLength)
-    }
-
-    @Test("responseWithFile byteRange isAttachment creates the same response as the designated initializer")
-    func responseWithFileByteRangeIsAttachmentMatchesDesignatedInit() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let content = makeTestData(byteCount: 300)
-        let path = try writeTestFile(named: "combo_factory.bin", content: content, inDirectory: dir)
-        let range = NSRange(location: 0, length: 150)
-
-        let factoryResponse = DZWebServerFileResponse(
-            file: path,
-            byteRange: range,
-            isAttachment: true,
-            mimeTypeOverrides: nil
-        )
-        let initResponse = DZWebServerFileResponse(
-            file: path,
-            byteRange: range,
-            isAttachment: true,
-            mimeTypeOverrides: nil
-        )
-
-        #expect(factoryResponse != nil, "Factory method should create a combined response")
-        #expect(initResponse != nil, "Designated initializer should create a combined response")
-        #expect(factoryResponse?.statusCode == initResponse?.statusCode)
-        #expect(factoryResponse?.contentLength == initResponse?.contentLength)
-        #expect(factoryResponse?.contentType == initResponse?.contentType)
-    }
-
-    // NOTE: Factory method with non-existent file test omitted.
-    // DZWebServerFileResponse triggers DWS_DNOT_REACHED() (abort) in DEBUG
-    // when lstat fails on a non-existent path.
-}
-
-// MARK: - Edge Cases
-
-@Suite("DZWebServerFileResponse - Edge Cases", .serialized, .tags(.response, .fileIO, .properties))
-struct EdgeCaseTests {
-    init() {
-        DZWebServerTestSetup.ensureInitialized()
-    }
-
-    @Test("Response for a file with unicode characters in the name")
-    func responseForFileWithUnicodeCharactersInName() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(
-            named: "\u{1F4C4}document\u{00E9}.txt",
-            content: Data("unicode name".utf8),
-            inDirectory: dir
-        )
-        let response = DZWebServerFileResponse(file: path)
-
-        #expect(
-            response != nil,
-            "Should create a response for a file with unicode characters in its name"
-        )
-        #expect(
-            response?.contentLength == 12,
-            "contentLength should match the file content size"
-        )
-    }
-
-    @Test("Response for a file with spaces in the name")
-    func responseForFileWithSpacesInName() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(
-            named: "my document file.txt",
-            content: Data("spaces in name".utf8),
-            inDirectory: dir
-        )
-        let response = DZWebServerFileResponse(file: path)
-
-        #expect(
-            response != nil,
-            "Should create a response for a file with spaces in its name"
-        )
-    }
-
-    @Test("Response for an empty file (0 bytes) succeeds with contentLength zero")
-    func responseForEmptyFileSucceedsWithContentLengthZero() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "empty.txt", content: Data(), inDirectory: dir)
-        let response = DZWebServerFileResponse(file: path)
-
-        #expect(
-            response != nil,
-            "Should create a response for a zero-byte file"
-        )
-        #expect(
-            response?.contentLength == 0,
-            "contentLength should be 0 for an empty file"
-        )
-        #expect(
-            response?.statusCode == 200,
-            "Status code should be 200 for an empty file served in full"
-        )
-    }
-
-    @Test("Response for a file with no extension uses application/octet-stream")
-    func responseForFileWithNoExtensionUsesOctetStream() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "Makefile", content: Data("all: build".utf8), inDirectory: dir)
-        let response = DZWebServerFileResponse(file: path)
-
-        #expect(
-            response != nil,
-            "Should create a response for a file with no extension"
-        )
-        #expect(
-            response?.contentType == "application/octet-stream",
-            "contentType should default to 'application/octet-stream' for files without an extension"
-        )
-    }
-
-    @Test("Response for a file with a very long name")
-    func responseForFileWithVeryLongName() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let longName = String(repeating: "a", count: 200) + ".txt"
-        let path = try writeTestFile(named: longName, content: Data("long name".utf8), inDirectory: dir)
-        let response = DZWebServerFileResponse(file: path)
-
-        #expect(
-            response != nil,
-            "Should create a response for a file with a very long name"
-        )
-    }
-
-    @Test("Byte range on empty file returns nil because resolved range is zero length")
-    func byteRangeOnEmptyFileReturnsNil() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "empty_ranged.bin", content: Data(), inDirectory: dir)
-        let range = NSRange(location: 0, length: 100)
-        let response = DZWebServerFileResponse(file: path, byteRange: range)
-
-        #expect(
-            response == nil,
-            "Should return nil because the byte range resolves to zero bytes on an empty file"
-        )
-    }
-
-    @Test("Suffix range on empty file returns nil")
-    func suffixRangeOnEmptyFileReturnsNil() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "empty_suffix.bin", content: Data(), inDirectory: dir)
-        let range = NSRange(location: Int(bitPattern: UInt.max), length: 100)
-        let response = DZWebServerFileResponse(file: path, byteRange: range)
-
-        #expect(
-            response == nil,
-            "Should return nil because suffix range on an empty file resolves to zero bytes"
-        )
-    }
-
-    @Test("Response for a single-byte file has contentLength of 1")
-    func responseForSingleByteFileHasContentLengthOf1() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "one_byte.bin", content: Data([0x42]), inDirectory: dir)
-        let response = DZWebServerFileResponse(file: path)
-
-        #expect(response != nil, "Should create a response for a 1-byte file")
-        #expect(response?.contentLength == 1, "contentLength should be 1")
-    }
-
-    @Test("Byte range requesting exactly the full file via explicit offset and length produces status 206")
-    func byteRangeRequestingExactlyFullFileProducesStatus206() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let content = makeTestData(byteCount: 256)
-        let path = try writeTestFile(named: "exact_range.bin", content: content, inDirectory: dir)
-
-        // Request exactly the entire file as a byte range
-        let range = NSRange(location: 0, length: 256)
-        let response = DZWebServerFileResponse(file: path, byteRange: range)
-
-        #expect(response != nil, "Should create a response for a range covering the full file")
-        #expect(
-            response?.statusCode == 206,
-            "Status code should be 206 even when the range covers the entire file"
-        )
-        #expect(
-            response?.contentLength == 256,
-            "contentLength should be the full file size"
-        )
-    }
-
-    @Test("Response preserves hasBody true even when file is empty")
-    func responsePreservesHasBodyTrueEvenWhenFileIsEmpty() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let path = try writeTestFile(named: "empty_body.dat", content: Data(), inDirectory: dir)
-        let response = DZWebServerFileResponse(file: path)
-
-        #expect(response != nil, "Should create a response for an empty file")
-        #expect(
-            response?.hasBody() == true,
-            "hasBody should return true because contentType is set even for empty files"
-        )
-    }
-}
-
-// MARK: - Body Reader Protocol
-
-@Suite("DZWebServerFileResponse - Body Reader", .serialized, .tags(.response, .fileIO))
-struct BodyReaderTests {
-    init() {
-        DZWebServerTestSetup.ensureInitialized()
-    }
-
-    @Test("Open, readData, and close lifecycle completes without error for a valid file")
-    func openReadCloseLifecycleCompletesWithoutError() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        let content = makeTestData(byteCount: 128)
-        let path = try writeTestFile(named: "readable.bin", content: content, inDirectory: dir)
-        let response = try #require(DZWebServerFileResponse(file: path))
-
-        // Open
-        try response.open()
-
-        // Read all data
-        var allData = Data()
-        while true {
-            let chunk = try response.readData()
-            if chunk.isEmpty {
-                break
-            }
-            allData.append(chunk)
+@Suite("DZWebServerFileResponse", .serialized, .tags(.response, .fileIO))
+struct DZWebServerFileResponseTests {
+    // MARK: Full File
+
+    @Suite("Full file")
+    struct FullFile {
+        private let directory: FixtureDirectory
+
+        init() throws {
+            self.directory = try FixtureDirectory()
         }
 
-        // Close
-        response.close()
+        @Test("Full-file response has status 200, file size, MIME type and file metadata")
+        func fullFileResponseReflectsFile() throws {
+            let path = try self.directory.writeFile(named: "hello.txt", content: makeTestData(byteCount: 512))
+            let response = try #require(DZWebServerFileResponse(file: path))
 
-        #expect(
-            allData.count == 128,
-            "Total data read should equal the file size"
-        )
-        #expect(
-            allData == content,
-            "Data read should match the original file content"
-        )
-    }
+            let attributes = try FileManager.default.attributesOfItem(atPath: path)
+            let modificationDate = try #require(attributes[.modificationDate] as? Date)
 
-    @Test("Reading a byte range returns only the requested portion of the file")
-    func readingByteRangeReturnsOnlyRequestedPortion() throws {
-        let dir = try makeTestDirectory()
-        defer { removeTestDirectory(dir) }
-
-        // Create a file with known sequential content
-        let content = makeTestData(byteCount: 1000)
-        let path = try writeTestFile(named: "range_read.bin", content: content, inDirectory: dir)
-
-        // Request bytes 100-199 (100 bytes)
-        let range = NSRange(location: 100, length: 100)
-        let response = try #require(DZWebServerFileResponse(file: path, byteRange: range))
-
-        try response.open()
-
-        var allData = Data()
-        while true {
-            let chunk = try response.readData()
-            if chunk.isEmpty {
-                break
-            }
-            allData.append(chunk)
+            #expect(response.statusCode == 200)
+            #expect(response.contentLength == 512)
+            #expect(response.contentType == "text/plain")
+            #expect(response.hasBody())
+            #expect(abs(response.lastModifiedDate.timeIntervalSince(modificationDate)) < 0.001)
+            #expect(!response.eTag.isEmpty)
+            #expect(additionalHeaders(of: response)["Content-Range"] == nil)
         }
 
-        response.close()
+        @Test(
+            "MIME type is resolved from the file extension",
+            arguments: [
+                ("page.html", "text/html"),
+                ("style.css", "text/css"),
+                ("app.js", "text/javascript"),
+                ("data.json", "application/json"),
+                ("image.png", "image/png"),
+                ("photo.jpg", "image/jpeg"),
+                ("document.pdf", "application/pdf"),
+                ("Makefile", "application/octet-stream"),
+            ] as [(String, String)]
+        )
+        func mimeTypeIsResolvedFromExtension(fileName: String, expectedContentType: String) throws {
+            let path = try self.directory.writeFile(named: fileName, content: Data("x".utf8))
+            let response = try #require(DZWebServerFileResponse(file: path))
 
-        let expectedSlice = content[100..<200]
-        #expect(
-            allData.count == 100,
-            "Should read exactly 100 bytes for the specified range"
+            #expect(response.contentType == expectedContentType)
+        }
+
+        @Test("MIME type override replaces the built-in type for its extension")
+        func mimeTypeOverrideReplacesBuiltInType() throws {
+            let path = try self.directory.writeFile(named: "data.txt", content: Data("override".utf8))
+            let response = try #require(
+                DZWebServerFileResponse(
+                    file: path,
+                    byteRange: suffixRange(length: 0),
+                    isAttachment: false,
+                    mimeTypeOverrides: ["txt": "application/custom"]
+                )
+            )
+
+            #expect(response.contentType == "application/custom")
+        }
+
+        @Test("Empty file is served in full with zero length and an empty body")
+        func emptyFileIsServedInFull() throws {
+            let path = try self.directory.writeFile(named: "empty.dat", content: Data())
+            let response = try #require(DZWebServerFileResponse(file: path))
+
+            #expect(response.statusCode == 200)
+            #expect(response.contentLength == 0)
+            #expect(response.hasBody())
+            #expect(try TestSupport.readBody(of: response).isEmpty)
+        }
+
+        @Test(
+            "Files with special characters in their names are served",
+            arguments: [
+                "\u{1F4C4}document\u{00E9}.txt",
+                "my document file.txt",
+                String(repeating: "a", count: 200) + ".txt",
+            ]
         )
-        #expect(
-            allData == Data(expectedSlice),
-            "Data read should match the expected byte range of the original content"
+        func specialFileNamesAreServed(fileName: String) throws {
+            let content = Data("special name".utf8)
+            let path = try self.directory.writeFile(named: fileName, content: content)
+            let response = try #require(DZWebServerFileResponse(file: path))
+
+            #expect(response.contentLength == UInt(content.count))
+            #expect(try TestSupport.readBody(of: response) == content)
+        }
+    }
+
+    // MARK: Byte Range
+
+    @Suite("Byte range")
+    struct ByteRange {
+        private let directory: FixtureDirectory
+
+        init() throws {
+            self.directory = try FixtureDirectory()
+        }
+
+        @Test(
+            "Byte range is clamped to the file and served as 206 with a Content-Range header",
+            arguments: [
+                (1000, NSRange(location: 0, length: 100), 100, "bytes 0-99/1000"),
+                (1000, suffixRange(length: 100), 100, "bytes 900-999/1000"),
+                (200, NSRange(location: 0, length: 1000), 200, "bytes 0-199/200"),
+                (50, suffixRange(length: 9999), 50, "bytes 0-49/50"),
+                (256, NSRange(location: 0, length: 256), 256, "bytes 0-255/256"),
+            ] as [(Int, NSRange, UInt, String)]
         )
+        func byteRangeIsServedAsPartialContent(
+            fileSize: Int,
+            range: NSRange,
+            expectedLength: UInt,
+            expectedContentRange: String
+        ) throws {
+            let path = try self.directory.writeFile(named: "ranged.bin", content: makeTestData(byteCount: fileSize))
+            let response = try #require(DZWebServerFileResponse(file: path, byteRange: range))
+
+            #expect(response.statusCode == 206)
+            #expect(response.contentLength == expectedLength)
+            #expect(additionalHeaders(of: response)["Content-Range"] == expectedContentRange)
+        }
+
+        @Test("Whole-file sentinel range serves the full file as 200 without Content-Range")
+        func wholeFileSentinelServesFullFile() throws {
+            let path = try self.directory.writeFile(named: "full.bin", content: makeTestData(byteCount: 500))
+            let response = try #require(DZWebServerFileResponse(file: path, byteRange: suffixRange(length: 0)))
+
+            #expect(response.statusCode == 200)
+            #expect(response.contentLength == 500)
+            #expect(additionalHeaders(of: response)["Content-Range"] == nil)
+        }
+
+        @Test(
+            "Byte range resolving to zero bytes returns nil",
+            arguments: [
+                (100, NSRange(location: 100, length: 50)),
+                (0, NSRange(location: 0, length: 100)),
+                (0, suffixRange(length: 100)),
+            ] as [(Int, NSRange)]
+        )
+        func zeroLengthRangeReturnsNil(fileSize: Int, range: NSRange) throws {
+            let path = try self.directory.writeFile(named: "small.bin", content: makeTestData(byteCount: fileSize))
+
+            #expect(DZWebServerFileResponse(file: path, byteRange: range) == nil)
+        }
+    }
+
+    // MARK: Attachment
+
+    @Suite("Attachment")
+    struct Attachment {
+        private let directory: FixtureDirectory
+
+        init() throws {
+            self.directory = try FixtureDirectory()
+        }
+
+        @Test("Attachment response sets a Content-Disposition header with the file name")
+        func attachmentSetsContentDisposition() throws {
+            let path = try self.directory.writeFile(named: "download.zip", content: Data("zip".utf8))
+            let response = try #require(DZWebServerFileResponse(file: path, isAttachment: true))
+
+            #expect(response.statusCode == 200)
+            #expect(
+                additionalHeaders(of: response)["Content-Disposition"]
+                    == "attachment; filename=\"download.zip\"; filename*=UTF-8''download.zip"
+            )
+        }
+
+        @Test("Inline response has no Content-Disposition header")
+        func inlineResponseHasNoContentDisposition() throws {
+            let path = try self.directory.writeFile(named: "inline.txt", content: Data("inline".utf8))
+            let response = try #require(DZWebServerFileResponse(file: path, isAttachment: false))
+
+            #expect(additionalHeaders(of: response)["Content-Disposition"] == nil)
+        }
+
+        @Test("Attachment with a non-ASCII file name percent-encodes it in filename*")
+        func attachmentPercentEncodesNonASCIIFileName() throws {
+            let path = try self.directory.writeFile(named: "r\u{00E9}sum\u{00E9}.txt", content: Data("cv".utf8))
+            let response = try #require(DZWebServerFileResponse(file: path, isAttachment: true))
+
+            #expect(
+                additionalHeaders(of: response)["Content-Disposition"]
+                    == "attachment; filename=\"r\u{00E9}sum\u{00E9}.txt\"; filename*=UTF-8''r%C3%A9sum%C3%A9.txt"
+            )
+        }
+
+        @Test("Attachment with a byte range sets both Content-Disposition and Content-Range")
+        func attachmentWithByteRangeSetsBothHeaders() throws {
+            let path = try self.directory.writeFile(named: "partial.bin", content: makeTestData(byteCount: 500))
+            let response = try #require(
+                DZWebServerFileResponse(
+                    file: path,
+                    byteRange: NSRange(location: 0, length: 200),
+                    isAttachment: true,
+                    mimeTypeOverrides: nil
+                )
+            )
+            let headers = additionalHeaders(of: response)
+
+            #expect(response.statusCode == 206)
+            #expect(response.contentLength == 200)
+            #expect(headers["Content-Range"] == "bytes 0-199/500")
+            #expect(headers["Content-Disposition"]?.hasPrefix("attachment; filename=\"partial.bin\"") == true)
+        }
+    }
+
+    // MARK: ETag
+
+    @Suite("ETag")
+    struct ETag {
+        private let directory: FixtureDirectory
+
+        init() throws {
+            self.directory = try FixtureDirectory()
+        }
+
+        @Test("Responses for the same unmodified file have identical eTag and lastModifiedDate")
+        func unmodifiedFileHasStableValidators() throws {
+            let path = try self.directory.writeFile(named: "stable.txt", content: Data("stable".utf8))
+            let first = try #require(DZWebServerFileResponse(file: path))
+            let second = try #require(DZWebServerFileResponse(file: path))
+
+            #expect(first.eTag == second.eTag)
+            #expect(first.lastModifiedDate == second.lastModifiedDate)
+        }
+
+        @Test("eTag and lastModifiedDate change when the file's modification date changes")
+        func modifiedFileChangesValidators() throws {
+            let path = try self.directory.writeFile(named: "mutable.txt", content: Data("version 1".utf8))
+            let original = try #require(DZWebServerFileResponse(file: path))
+
+            let newModificationDate = original.lastModifiedDate.addingTimeInterval(-3600)
+            try FileManager.default.setAttributes([.modificationDate: newModificationDate], ofItemAtPath: path)
+            let modified = try #require(DZWebServerFileResponse(file: path))
+
+            #expect(modified.eTag != original.eTag)
+            #expect(abs(modified.lastModifiedDate.timeIntervalSince(newModificationDate)) < 0.001)
+        }
+    }
+
+    // MARK: Body Reader
+
+    @Suite("Body reader")
+    struct BodyReader {
+        private let directory: FixtureDirectory
+
+        init() throws {
+            self.directory = try FixtureDirectory()
+        }
+
+        @Test("Reading a file larger than the read buffer returns its full content")
+        func readingReturnsFullContent() throws {
+            // Larger than the framework's 32 KiB read buffer, so several chunks are read.
+            let content = makeTestData(byteCount: 100_000)
+            let path = try self.directory.writeFile(named: "readable.bin", content: content)
+            let response = try #require(DZWebServerFileResponse(file: path))
+
+            #expect(try TestSupport.readBody(of: response) == content)
+        }
+
+        @Test("Reading a byte range returns only the requested bytes")
+        func readingByteRangeReturnsRequestedBytes() throws {
+            let content = makeTestData(byteCount: 1000)
+            let path = try self.directory.writeFile(named: "range.bin", content: content)
+            let response = try #require(
+                DZWebServerFileResponse(file: path, byteRange: NSRange(location: 100, length: 100))
+            )
+
+            #expect(try TestSupport.readBody(of: response) == content.subdata(in: 100..<200))
+        }
     }
 }

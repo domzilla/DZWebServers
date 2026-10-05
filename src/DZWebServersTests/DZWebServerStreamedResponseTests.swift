@@ -7,396 +7,207 @@
 //
 
 import DZWebServers
+import Foundation
 import Testing
 
-// MARK: - Root Suite
+/// Hands out a fixed sequence of chunks, then empty data to end the stream. Read from the server's GCD queue.
+private final class ChunkSource: @unchecked Sendable {
+    private var chunks: [Data]
 
-@Suite("DZWebServerStreamedResponse", .serialized, .tags(.response, .streaming, .properties))
+    init(_ chunks: [String]) {
+        self.chunks = chunks.map { Data($0.utf8) }
+    }
+
+    func next() -> Data {
+        self.chunks.isEmpty ? Data() : self.chunks.removeFirst()
+    }
+}
+
+/// Reads one chunk through the body reader protocol; stream blocks in these tests complete synchronously.
+private func readChunk(from response: DZWebServerStreamedResponse) -> (data: Data?, error: Error?) {
+    var result: (data: Data?, error: Error?) = (nil, nil)
+    var isCompleted = false
+    (response as DZWebServerBodyReader).asyncReadData?(completion: { data, error in
+        result = (data, error)
+        isCompleted = true
+    })
+    #expect(isCompleted)
+    return result
+}
+
+@Suite("DZWebServerStreamedResponse", .serialized, .tags(.response, .streaming))
 struct DZWebServerStreamedResponseTests {
-    init() {
-        DZWebServerTestSetup.ensureInitialized()
-    }
+    // MARK: Initialization
 
-    // MARK: - Synchronous Stream Block
-
-    @Suite("Synchronous Stream Block")
-    struct SynchronousStreamBlock {
-        @Test("Initializing with a stream block sets the content type")
-        func initWithStreamBlockSetsContentType() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
+    @Suite("Initialization", .tags(.properties))
+    struct Initialization {
+        @Test("Sync initializer sets the content type and leaves the length unknown for chunked encoding")
+        func syncInitializerConfiguresChunkedBody() {
+            let response = DZWebServerStreamedResponse(contentType: "text/plain", streamBlock: { _ in Data() })
 
             #expect(response.contentType == "text/plain")
-        }
-
-        @Test("Content length defaults to UInt.max for chunked transfer encoding")
-        func contentLengthDefaultsToUIntMax() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
-
             #expect(response.contentLength == UInt.max)
-        }
-
-        @Test("Status code defaults to 200 OK")
-        func statusCodeDefaultsTo200() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
-
             #expect(response.statusCode == 200)
+            #expect(response.hasBody())
         }
 
-        @Test("Has body returns true when content type is set")
-        func hasBodyReturnsTrue() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "application/json",
-                streamBlock: { _ in Data() }
-            )
-
-            #expect(response.hasBody() == true)
-        }
-
-        @Test("Stream block that returns empty data immediately signals completion")
-        func streamBlockReturningEmptyDataSignalsCompletion() {
-            // The stream block returns empty Data to signal end-of-stream.
-            // We verify the response is created successfully with this block.
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
-
-            #expect(response.contentType == "text/plain")
-            #expect(response.hasBody() == true)
-        }
-    }
-
-    // MARK: - Asynchronous Stream Block
-
-    @Suite("Asynchronous Stream Block")
-    struct AsynchronousStreamBlock {
-        @Test("Initializing with an async stream block sets the content type")
-        func initWithAsyncStreamBlockSetsContentType() {
+        @Test("Async initializer sets the content type and leaves the length unknown for chunked encoding")
+        func asyncInitializerConfiguresChunkedBody() {
             let response = DZWebServerStreamedResponse(
                 contentType: "text/event-stream",
-                asyncStreamBlock: { completion in
-                    completion(Data(), nil)
-                }
+                asyncStreamBlock: { completion in completion(Data(), nil) }
             )
 
             #expect(response.contentType == "text/event-stream")
-        }
-
-        @Test("Content length defaults to UInt.max for async stream")
-        func contentLengthDefaultsToUIntMaxForAsync() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/event-stream",
-                asyncStreamBlock: { completion in
-                    completion(Data(), nil)
-                }
-            )
-
             #expect(response.contentLength == UInt.max)
-        }
-
-        @Test("Status code defaults to 200 OK for async stream")
-        func statusCodeDefaultsTo200ForAsync() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/event-stream",
-                asyncStreamBlock: { completion in
-                    completion(Data(), nil)
-                }
-            )
-
             #expect(response.statusCode == 200)
+            #expect(response.hasBody())
         }
 
-        @Test("Has body returns true for async stream response")
-        func hasBodyReturnsTrueForAsync() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "application/octet-stream",
-                asyncStreamBlock: { completion in
-                    completion(Data(), nil)
-                }
-            )
+        @Test("Description marks the body as a stream")
+        func descriptionMarksStream() {
+            let response = DZWebServerStreamedResponse(contentType: "text/plain", streamBlock: { _ in Data() })
 
-            #expect(response.hasBody() == true)
+            #expect(response.description.hasSuffix("\n\n<STREAM>"))
         }
     }
 
-    // MARK: - Content Type Variations
+    // MARK: Reading
 
-    @Suite("Content Type Variations")
-    struct ContentTypeVariations {
-        @Test(
-            "Content type is set correctly for various MIME types",
-            arguments: [
-                "text/event-stream",
-                "application/json",
-                "application/octet-stream",
-                "text/plain",
-                "text/html",
-                "application/xml",
-                "multipart/mixed",
-            ]
-        )
-        func contentTypeIsSetCorrectly(mimeType: String) {
-            let response = DZWebServerStreamedResponse(
-                contentType: mimeType,
-                streamBlock: { _ in Data() }
-            )
+    @Suite("Reading")
+    struct Reading {
+        @Test("Sync stream block chunks are delivered in order, followed by empty data")
+        func syncStreamBlockDeliversChunks() {
+            let source = ChunkSource(["Hello, ", "World"])
+            let response = DZWebServerStreamedResponse(contentType: "text/plain", streamBlock: { _ in source.next() })
 
-            #expect(response.contentType == mimeType)
+            #expect(readChunk(from: response).data == Data("Hello, ".utf8))
+            #expect(readChunk(from: response).data == Data("World".utf8))
+            #expect(readChunk(from: response).data == Data())
         }
 
-        @Test("Content type with charset parameter is preserved")
-        func contentTypeWithCharsetIsPreserved() {
-            let contentType = "text/plain; charset=utf-8"
-            let response = DZWebServerStreamedResponse(
-                contentType: contentType,
-                streamBlock: { _ in Data() }
-            )
+        @Test("Error set by the sync stream block is passed to the reader")
+        func syncStreamBlockErrorIsPropagated() {
+            let response = DZWebServerStreamedResponse(contentType: "text/plain", streamBlock: { error in
+                error?.pointee = NSError(domain: "StreamTest", code: 42)
+                return nil
+            })
 
-            #expect(response.contentType == contentType)
+            let result = readChunk(from: response)
+
+            #expect(result.data == nil)
+            let error = result.error as NSError?
+            #expect(error?.domain == "StreamTest")
+            #expect(error?.code == 42)
         }
 
-        @Test("Content type with multiple parameters is preserved")
-        func contentTypeWithMultipleParametersIsPreserved() {
-            let contentType = "text/plain; charset=utf-8; boundary=something"
-            let response = DZWebServerStreamedResponse(
-                contentType: contentType,
-                streamBlock: { _ in Data() }
-            )
-
-            #expect(response.contentType == contentType)
-        }
-    }
-
-    // MARK: - Factory Methods
-
-    @Suite("Factory Methods")
-    struct FactoryMethods {
-        @Test("responseWithContentType:streamBlock: creates a valid response")
-        func factoryWithStreamBlockCreatesValidResponse() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "application/json",
-                streamBlock: { _ in Data() }
-            )
-
-            #expect(response.contentType == "application/json")
-            #expect(response.statusCode == 200)
-            #expect(response.contentLength == UInt.max)
-            #expect(response.hasBody() == true)
-        }
-
-        @Test("responseWithContentType:asyncStreamBlock: creates a valid response")
-        func factoryWithAsyncStreamBlockCreatesValidResponse() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/event-stream",
-                asyncStreamBlock: { completion in
-                    completion(Data(), nil)
-                }
-            )
-
-            #expect(response.contentType == "text/event-stream")
-            #expect(response.statusCode == 200)
-            #expect(response.contentLength == UInt.max)
-            #expect(response.hasBody() == true)
-        }
-    }
-
-    // MARK: - Property Behavior
-
-    @Suite("Property Behavior")
-    struct PropertyBehavior {
-        @Test("Status code can be changed after creation")
-        func statusCodeCanBeChanged() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
-
-            response.statusCode = 201
-            #expect(response.statusCode == 201)
-        }
-
-        @Test("Cache control max age defaults to zero")
-        func cacheControlMaxAgeDefaultsToZero() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
-
-            #expect(response.cacheControlMaxAge == 0)
-        }
-
-        @Test("Cache control max age can be set after creation")
-        func cacheControlMaxAgeCanBeSet() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
-
-            response.cacheControlMaxAge = 3600
-            #expect(response.cacheControlMaxAge == 3600)
-        }
-
-        @Test("Last modified date defaults to nil")
-        func lastModifiedDateDefaultsToNil() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
-
-            #expect(response.lastModifiedDate == nil)
-        }
-
-        @Test("Last modified date can be set after creation")
-        func lastModifiedDateCanBeSet() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
-
-            let date = Date()
-            response.lastModifiedDate = date
-            #expect(response.lastModifiedDate == date)
-        }
-
-        @Test("ETag defaults to nil")
-        func eTagDefaultsToNil() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
-
-            #expect(response.eTag == nil)
-        }
-
-        @Test("ETag can be set after creation")
-        func eTagCanBeSet() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
-
-            response.eTag = "\"abc123\""
-            #expect(response.eTag == "\"abc123\"")
-        }
-
-        @Test("Content type can be changed after creation")
-        func contentTypeCanBeChanged() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
-
-            response.contentType = "application/json"
-            #expect(response.contentType == "application/json")
-        }
-
-        @Test("Content length remains UInt.max even when not explicitly set")
-        func contentLengthRemainsUIntMax() {
+        @Test("Async stream block data and error are passed to the reader unchanged")
+        func asyncStreamBlockResultIsPassedThrough() {
             let response = DZWebServerStreamedResponse(
                 contentType: "text/plain",
                 asyncStreamBlock: { completion in
-                    completion(Data(), nil)
+                    completion(Data("chunk".utf8), NSError(domain: "StreamTest", code: 7))
                 }
             )
 
-            // Streamed responses never know total size upfront,
-            // so contentLength stays at UInt.max for chunked encoding.
-            #expect(response.contentLength == UInt.max)
+            let result = readChunk(from: response)
+
+            #expect(result.data == Data("chunk".utf8))
+            #expect((result.error as NSError?)?.code == 7)
         }
     }
 
-    // MARK: - Gzip Content Encoding
+    // MARK: Serving
 
-    @Suite("Gzip Content Encoding")
-    struct GzipContentEncoding {
-        @Test("Gzip content encoding defaults to disabled")
-        func gzipDefaultsToDisabled() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
-
-            #expect(response.isGZipContentEncodingEnabled == false)
+    @Suite("Serving", .serialized, .tags(.integration))
+    struct Serving {
+        private func serve(_ makeResponse: @escaping () -> DZWebServerResponse) throws -> DZWebServer {
+            let server = DZWebServer()
+            server.addHandler(forMethod: "GET", path: "/stream", request: DZWebServerRequest.self) { _ in
+                makeResponse()
+            }
+            try TestSupport.start(server)
+            return server
         }
 
-        @Test("Gzip content encoding can be enabled")
-        func gzipCanBeEnabled() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
+        @Test("Sync stream is sent without a Content-Length and concatenates all chunks")
+        func syncStreamIsServedChunked() async throws {
+            let server = try self.serve {
+                let source = ChunkSource(["alpha-", "beta-", "gamma"])
+                return DZWebServerStreamedResponse(contentType: "text/plain", streamBlock: { _ in source.next() })
+            }
+            defer { server.stop() }
+            let url = try #require(server.serverURL?.appendingPathComponent("stream"))
 
-            response.isGZipContentEncodingEnabled = true
-            #expect(response.isGZipContentEncodingEnabled == true)
+            let (statusCode, data, response) = try await TestSupport.sendRequest(url: url)
+
+            #expect(statusCode == 200)
+            #expect(String(data: data, encoding: .utf8) == "alpha-beta-gamma")
+            #expect(response.expectedContentLength == -1)
+            #expect(response.value(forHTTPHeaderField: "Content-Type") == "text/plain")
         }
 
-        @Test("Enabling gzip keeps content length at UInt.max")
-        func enablingGzipKeepsContentLengthAtUIntMax() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
+        @Test("Async stream completed from another queue is served in full")
+        func asyncStreamIsServed() async throws {
+            let server = try self.serve {
+                let source = ChunkSource(["one", "two"])
+                return DZWebServerStreamedResponse(contentType: "text/plain", asyncStreamBlock: { completion in
+                    DispatchQueue.global().async {
+                        completion(source.next(), nil)
+                    }
+                })
+            }
+            defer { server.stop() }
+            let url = try #require(server.serverURL?.appendingPathComponent("stream"))
 
-            response.isGZipContentEncodingEnabled = true
-            #expect(response.contentLength == UInt.max)
-        }
-    }
+            let (statusCode, data, _) = try await TestSupport.sendRequest(url: url)
 
-    // MARK: - Custom Headers
-
-    @Suite("Custom Headers")
-    struct CustomHeaders {
-        @Test("Custom header can be set on a streamed response")
-        func customHeaderCanBeSet() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/event-stream",
-                streamBlock: { _ in Data() }
-            )
-
-            // Setting a custom header should not throw or crash.
-            response.setValue("no-cache", forAdditionalHeader: "Cache-Control")
-            response.setValue("keep-alive", forAdditionalHeader: "Connection")
-
-            // If we get here without crashing, the headers were accepted.
-            #expect(response.hasBody() == true)
+            #expect(statusCode == 200)
+            #expect(String(data: data, encoding: .utf8) == "onetwo")
         }
 
-        @Test("Custom header can be removed by setting nil")
-        func customHeaderCanBeRemoved() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/event-stream",
-                streamBlock: { _ in Data() }
-            )
+        @Test("Gzip-encoded stream is decoded by the client to the original content")
+        func gzipStreamIsServedEncoded() async throws {
+            let payload = String(repeating: "compressible ", count: 500)
+            let server = try self.serve {
+                let source = ChunkSource([payload])
+                let response = DZWebServerStreamedResponse(
+                    contentType: "text/plain",
+                    streamBlock: { _ in source.next() }
+                )
+                response.isGZipContentEncodingEnabled = true
+                return response
+            }
+            defer { server.stop() }
+            let url = try #require(server.serverURL?.appendingPathComponent("stream"))
 
-            response.setValue("custom-value", forAdditionalHeader: "X-Custom")
-            response.setValue(nil, forAdditionalHeader: "X-Custom")
+            let (statusCode, data, response) = try await TestSupport.sendRequest(url: url)
 
-            // No crash means the header was removed successfully.
-            #expect(response.hasBody() == true)
+            #expect(statusCode == 200)
+            #expect(response.value(forHTTPHeaderField: "Content-Encoding") == "gzip")
+            withKnownIssue(
+                "Framework bug: the gzip encoder only forwards sync readData:, so an async stream body comes out empty"
+            ) {
+                #expect(String(data: data, encoding: .utf8) == payload)
+            }
         }
-    }
 
-    // MARK: - Inheritance
+        @Test("Additional headers set on the stream response are sent to the client")
+        func additionalHeadersAreSent() async throws {
+            let server = try self.serve {
+                let response = DZWebServerStreamedResponse(
+                    contentType: "text/event-stream",
+                    streamBlock: { _ in Data() }
+                )
+                response.setValue("no-transform", forAdditionalHeader: "X-Stream-Mode")
+                return response
+            }
+            defer { server.stop() }
+            let url = try #require(server.serverURL?.appendingPathComponent("stream"))
 
-    @Suite("Inheritance")
-    struct Inheritance {
-        @Test("Streamed response is a subclass of DZWebServerResponse")
-        func isSubclassOfDZWebServerResponse() {
-            let response = DZWebServerStreamedResponse(
-                contentType: "text/plain",
-                streamBlock: { _ in Data() }
-            )
+            let (_, _, response) = try await TestSupport.sendRequest(url: url)
 
-            #expect(response.isKind(of: DZWebServerResponse.self))
+            #expect(response.value(forHTTPHeaderField: "X-Stream-Mode") == "no-transform")
         }
     }
 }

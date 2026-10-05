@@ -8,9 +8,9 @@
 
 @import DZWebServers;
 
-// Forces DZWebServer +initialize onto the main thread via +load: it asserts isMainThread in DEBUG,
-// but Swift Testing runs tests on background threads. +initialize runs once per class, so every
-// subclass must be referenced here.
+// DZWebServer's +initialize asserts isMainThread in DEBUG, but Swift Testing runs tests on background
+// threads. +load runs on the main thread at bundle load, before any test. +initialize runs once per
+// class, so every subclass must be referenced here.
 @interface DZTestBootstrap : NSObject
 @end
 
@@ -18,9 +18,6 @@
 
 + (void)load
 {
-    // Trigger +initialize for DZWebServer and all subclasses on the
-    // main thread.  After this, no further +initialize calls will
-    // occur for these classes.
     [DZWebServer class];
     [DZWebDAVServer class];
     [DZWebUploader class];
