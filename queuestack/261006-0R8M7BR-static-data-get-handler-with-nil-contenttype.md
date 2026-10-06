@@ -10,6 +10,10 @@ labels:
 
 > **Note:** Agent-generated from an automated doc/code review. This may be a false positive — analyze and confirm against the code before fixing.
 
+## Parent
+
+261006-0RVAHY0
+
 `DZWebServer.m:983-991` forwards a nil `contentType` to `DZWebServerDataResponse`; `DZWebServerResponse.hasBody` is `_contentType != nil` (`DZWebServerResponse.m:177`), so the data is silently dropped.
 Header (`DZWebServer.h:937,943`) explicitly allows nil.
 Fix: fall back to `application/octet-stream` (or derive), or make the parameter nonnull.

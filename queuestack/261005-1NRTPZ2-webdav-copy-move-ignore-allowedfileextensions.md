@@ -10,6 +10,10 @@ labels:
 
 > **Note:** Produced during an autonomous agent run (test-suite review, 2026-10-05) and not verified by a human. This may be totally wrong — analyze and confirm before fixing.
 
+## Parent
+
+261006-0RVAHY0
+
 ## Problem
 
 In `DZWebDAVServer.m:356-367` (COPY/MOVE), `isDirectory` is overwritten by the destination-parent existence check, so it is always YES and the file-extension check is skipped.

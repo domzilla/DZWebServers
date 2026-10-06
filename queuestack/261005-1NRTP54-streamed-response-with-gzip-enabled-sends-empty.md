@@ -10,6 +10,10 @@ labels:
 
 > **Note:** Produced during an autonomous agent run (test-suite review, 2026-10-05) and not verified by a human. This may be totally wrong — analyze and confirm before fixing.
 
+## Parent
+
+261006-0RVAHY0
+
 ## Problem
 
 `DZWebServerResponse.m:61-63`: with `isGZipContentEncodingEnabled = YES`, a `DZWebServerStreamedResponse` sends an empty body. The gzip encoder only forwards the synchronous `readData:`, but the streamed response only implements `asyncReadDataWithCompletion:`.

@@ -10,6 +10,10 @@ labels:
 
 > **Note:** Agent-generated from an automated doc/code review. This may be a false positive — analyze and confirm against the code before fixing.
 
+## Parent
+
+261006-0RVAHY0
+
 `DZWebServerDataResponse.m:128` calls `NSJSONSerialization dataWithJSONObject:` without `isValidJSONObject:` first; invalid objects throw NSInvalidArgumentException rather than returning nil. Debug builds also hit `DWS_DNOT_REACHED()`.
 Header docs (`DZWebServerDataResponse.h:143,157,212,228`) promise nil.
 Fix: guard with `[NSJSONSerialization isValidJSONObject:object]` and return nil (drop the DNOT_REACHED).

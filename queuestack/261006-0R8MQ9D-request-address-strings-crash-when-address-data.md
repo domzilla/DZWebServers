@@ -10,6 +10,10 @@ labels:
 
 > **Note:** Agent-generated from an automated doc/code review. This may be a false positive — analyze and confirm against the code before fixing.
 
+## Parent
+
+261006-0RVAHY0
+
 `DZWebServerRequest.m:283-289` passes `_localAddressData.bytes` / `_remoteAddressData.bytes` straight to `DZWebServerStringFromSockAddr`, which dereferences `addr->sa_len` (`DZWebServerFunctions.m:245`).
 Header (`DZWebServerRequest.h:305,334`) declares nullable and documents nil before the address is set, but a request not created by a connection (e.g. tests, custom match blocks) crashes with NULL deref.
 Fix: return nil when the address data is nil.

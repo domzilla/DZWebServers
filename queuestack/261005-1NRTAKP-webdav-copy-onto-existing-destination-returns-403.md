@@ -10,6 +10,10 @@ labels:
 
 > **Note:** Produced during an autonomous agent run (test-suite review, 2026-10-05) and not verified by a human. This may be totally wrong — analyze and confirm before fixing.
 
+## Parent
+
+261006-0RVAHY0
+
 ## Problem
 
 `DZWebDAVServer.m:394`: COPY with `Overwrite: T` (or no Overwrite header) onto an existing destination fails with 403 "Failed copying". MOVE removes the destination first; COPY doesn't.

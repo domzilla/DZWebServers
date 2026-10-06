@@ -10,6 +10,10 @@ labels:
 
 > **Note:** Produced during an autonomous agent run (test-suite review, 2026-10-05) and not verified by a human. This may be totally wrong — analyze and confirm before fixing.
 
+## Parent
+
+261006-0RVAHY0
+
 ## Problem
 
 `DZWebDAVServer.m` `performCOPY` never checks that the source exists, so the copy fails and returns 403.
@@ -20,3 +24,7 @@ labels:
 ## Test
 
 Known-issue test in `src/DZWebServersTests/`.
+
+## Blocked by
+
+- 261005-1NRTPZ2 — WebDAV COPY/MOVE ignore allowedFileExtensions

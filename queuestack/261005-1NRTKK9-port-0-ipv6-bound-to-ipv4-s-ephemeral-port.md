@@ -10,6 +10,10 @@ labels:
 
 > **Note:** Produced during an autonomous agent run (test-suite review, 2026-10-05) and not verified by a human. This may be totally wrong — analyze and confirm before fixing.
 
+## Parent
+
+261006-0RVAHY0
+
 ## Problem
 
 `DZWebServer.m:528-548`: when started with port 0, the OS picks a port for the IPv4 socket and the IPv6 socket is then bound to that same port, without that port being known free on IPv6. Intermittently fails with `EADDRINUSE`; this happened for real during the test runs.

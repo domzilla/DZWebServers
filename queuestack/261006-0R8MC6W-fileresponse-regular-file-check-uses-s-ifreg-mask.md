@@ -10,6 +10,10 @@ labels:
 
 > **Note:** Agent-generated from an automated doc/code review. This may be a false positive — analyze and confirm against the code before fixing.
 
+## Parent
+
+261006-0RVAHY0
+
 `DZWebServerFileResponse.m:81` uses `!(info.st_mode & S_IFREG)`. S_IFREG is a bit pattern, not a mask, so sockets (S_IFSOCK) and symlinks (S_IFLNK, via lstat) pass the check.
 Impact: init succeeds for non-regular files, later open/read fails or serves odd content.
 Fix: use `!S_ISREG(info.st_mode)`.
