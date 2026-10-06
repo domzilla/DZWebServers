@@ -48,10 +48,10 @@ NS_ASSUME_NONNULL_BEGIN
 @optional
 
 /**
- *  @brief Called after a file has been successfully downloaded by a client through the web interface.
+ *  @brief Called when a client downloads a file through the web interface.
  *
- *  @discussion This method is dispatched asynchronously on the main queue after the server
- *  has begun sending the file response to the client. Use this to update your UI or track
+ *  @discussion This method is dispatched asynchronously on the main queue when the file
+ *  response is created, before the file has been sent. Use this to update your UI or track
  *  download activity.
  *
  *  @param uploader The @c DZWebUploader instance that served the download.
@@ -202,9 +202,9 @@ NS_ASSUME_NONNULL_BEGIN
  *  web interface template. It is also used as the default value for the @c header property
  *  if that property has not been explicitly set.
  *
- *  The default value is the application's display name (@c CFBundleDisplayName), falling
- *  back to the bundle name (@c CFBundleName), and on macOS further falling back to the
- *  process name.
+ *  The default value is @c nil, in which case the application's display name
+ *  (@c CFBundleDisplayName) is used, falling back to the bundle name (@c CFBundleName),
+ *  and on macOS further falling back to the process name.
  *
  *  @warning Any reserved HTML characters in the string value for this property must have
  *  been replaced by character entities (e.g. "&" becomes "&amp;amp;").
@@ -217,7 +217,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  @discussion This value is injected into the web interface template as the main heading
  *  visible to users when they open the uploader in a browser.
  *
- *  The default value is the same as the @c title property.
+ *  The default value is @c nil, in which case the effective @c title is used.
  *
  *  @warning Any reserved HTML characters in the string value for this property must have
  *  been replaced by character entities (e.g. "&" becomes "&amp;amp;").
@@ -231,7 +231,8 @@ NS_ASSUME_NONNULL_BEGIN
  *  users accessing the uploader. The value is inserted directly into the HTML template without
  *  escaping.
  *
- *  The default value is a localized short help text loaded from @c DZWebUploader.bundle.
+ *  The default value is @c nil, in which case a localized short help text loaded from
+ *  @c DZWebUploader.bundle is used.
  *
  *  @warning The string value for this property must be raw HTML
  *  (e.g. @c "\<p\>Some text\</p\>").
@@ -258,8 +259,9 @@ NS_ASSUME_NONNULL_BEGIN
  *  @discussion This value is injected into the web interface template as the page footer.
  *  Typically used to display branding or version information.
  *
- *  The default value is a formatted string combining the application's display name
- *  (or bundle name) with its short version string (@c CFBundleShortVersionString).
+ *  The default value is @c nil, in which case a formatted string combining the application's
+ *  display name (or bundle name) with its short version string (@c CFBundleShortVersionString)
+ *  is used.
  *  On macOS, if neither is available, it falls back to "OS X" and the operating system
  *  version string.
  *

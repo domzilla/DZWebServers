@@ -158,8 +158,8 @@ extern NSString* const DZWebServerRequestAttribute_RegexCaptures;
 /**
  *  @brief The HTTP headers for the request as key-value pairs.
  *
- *  Header names are used as dictionary keys in their original form (e.g.,
- *  @c Content-Type, @c Accept-Encoding). Values are the raw header strings.
+ *  Header names are used as dictionary keys as standardized by @c CFHTTPMessage
+ *  (e.g., @c Content-Type, @c Accept-Encoding). Values are the raw header strings.
  *
  *  This dictionary is set at initialization time and does not change.
  */
@@ -168,7 +168,8 @@ extern NSString* const DZWebServerRequestAttribute_RegexCaptures;
 /**
  *  @brief The path component of the request URL.
  *
- *  This is the URL path without the query string or fragment (e.g., @c /api/files ).
+ *  This is the percent-decoded URL path without the query string or fragment
+ *  (e.g., @c /api/files ).
  *  It is set at initialization time and does not change.
  *
  *  @see URL
@@ -181,7 +182,8 @@ extern NSString* const DZWebServerRequestAttribute_RegexCaptures;
  *  The dictionary maps parameter names to their values. For example, the URL
  *  @c /search?q=hello&page=2 produces @c @{@"q":@"hello", @"page":@"2"} .
  *
- *  @note This property is @c nil if the URL contains no query string.
+ *  @note For requests created by the server, this is an empty dictionary if the URL
+ *  contains no query string. It is @c nil only if @c nil was passed to the initializer.
  *
  *  @see URL
  */
@@ -291,7 +293,7 @@ extern NSString* const DZWebServerRequestAttribute_RegexCaptures;
  *  @brief The local (server-side) socket address as a human-readable string.
  *
  *  Computed from @c localAddressData. The format includes both the IP address
- *  and the port number (e.g., @c "192.168.1.10:8080" or @c "[::1]:8080").
+ *  and the port number (e.g., @c "192.168.1.10:8080" or @c "::1:8080").
  *
  *  @note This is a computed property. Each access converts @c localAddressData
  *  into a string representation.
@@ -320,7 +322,7 @@ extern NSString* const DZWebServerRequestAttribute_RegexCaptures;
  *  @brief The remote (client-side) socket address as a human-readable string.
  *
  *  Computed from @c remoteAddressData. The format includes both the IP address
- *  and the port number (e.g., @c "10.0.0.5:54321" or @c "[fe80::1]:54321").
+ *  and the port number (e.g., @c "10.0.0.5:54321" or @c "fe80::1:54321").
  *
  *  @note This is a computed property. Each access converts @c remoteAddressData
  *  into a string representation.
@@ -353,7 +355,8 @@ extern NSString* const DZWebServerRequestAttribute_RegexCaptures;
  *  @param path    The path component of the URL.
  *  @param query   The parsed query parameters, or @c nil if no query string is present.
  *  @return An initialized request, or @c nil if the headers contain contradictory
- *          or invalid values (e.g., negative @c Content-Length with chunked encoding).
+ *          or invalid values (e.g., a negative @c Content-Length, or @c Content-Length
+ *          combined with chunked encoding).
  */
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary<NSString*, NSString*>*)headers path:(NSString*)path query:(nullable NSDictionary<NSString*, NSString*>*)query NS_DESIGNATED_INITIALIZER;
 

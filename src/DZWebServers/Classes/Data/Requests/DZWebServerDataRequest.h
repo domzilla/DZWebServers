@@ -57,7 +57,8 @@ NS_ASSUME_NONNULL_BEGIN
  *  is available after the connection has finished receiving the request body
  *  (i.e. after the @c DZWebServerBodyWriter protocol methods have completed).
  *
- *  If the request has no body, this returns an empty @c NSData instance.
+ *  This is @c nil until the body has started to be received, so it remains @c nil
+ *  for requests without a body.
  */
 @property(nonatomic, copy, readonly) NSData* data;
 
@@ -70,7 +71,8 @@ NS_ASSUME_NONNULL_BEGIN
  *  @discussion These properties lazily decode the raw body data on first access
  *  and cache the result for subsequent reads. Each property validates the
  *  request's @c Content-Type before attempting decoding and returns @c nil if
- *  the content type does not match or if a decoding error occurs.
+ *  the content type does not match (Debug builds assert instead) or if a decoding
+ *  error occurs.
  */
 @interface DZWebServerDataRequest (Extensions)
 

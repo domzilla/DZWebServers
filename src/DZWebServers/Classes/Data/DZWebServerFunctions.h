@@ -94,7 +94,8 @@ NSString* _Nullable DZWebServerUnescapeURLString(NSString* string);
  * first @c = character. Both keys and values are unescaped: @c + characters are replaced
  * with spaces, and percent-encoded sequences are decoded via @c DZWebServerUnescapeURLString.
  *
- * If a key or value cannot be decoded, that pair is skipped and a warning is logged.
+ * If a key or value cannot be decoded, that pair is skipped and a warning is logged
+ * (Debug builds assert instead).
  * Duplicate keys are resolved in favor of the last occurrence.
  *
  * @param form The URL-encoded form body string (e.g., @c "name=John&age=30" ).
@@ -225,8 +226,8 @@ NSDate* _Nullable DZWebServerParseISO8601(NSString* string);
  * This is useful for sanitizing request paths before mapping them to the file system.
  *
  * @param path The URL path to normalize (e.g., @c "/a/b/../c/./d/" ).
- * @return The normalized path (e.g., @c "/a/c/d" ). Returns an empty string if all
- *         components are resolved away.
+ * @return The normalized path (e.g., @c "/a/c/d" ). Returns @c "/" (or an empty string
+ *         for a relative path) if all components are resolved away.
  *
  * @note This function is thread-safe and does not access the file system.
  */

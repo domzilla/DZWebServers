@@ -49,10 +49,11 @@ NS_ASSUME_NONNULL_BEGIN
 @optional
 
 /**
- *  @brief Called after a file has been successfully downloaded (served) via a GET request.
+ *  @brief Called when a file is served via a GET request.
  *
- *  This method is invoked when a client retrieves a file from the WebDAV server.
- *  It is not called for directory listings or HEAD requests.
+ *  This method is dispatched when the file response is created, before the file
+ *  has been sent. It is not called for directories. HEAD requests also trigger it
+ *  when they are mapped to GET (the default).
  *
  *  @param server The WebDAV server instance that served the file.
  *  @param path   The absolute file system path of the file that was downloaded.

@@ -461,7 +461,7 @@ extern NSString* const DZWebServerAuthenticationMethod_DigestAccess;
  *  calling this method. If a new connection opens during that interval, this
  *  callback is suppressed.
  *
- *  On iOS, the background task (if any) is ended after this callback.
+ *  On iOS, the background task (if any) is ended before this callback.
  *
  *  @param server The server instance that disconnected.
  *
@@ -473,7 +473,8 @@ extern NSString* const DZWebServerAuthenticationMethod_DigestAccess;
  *  @brief Called after the server has fully stopped.
  *
  *  At this point, the listening sockets are closed and the @c running property
- *  returns @c NO.
+ *  returns @c NO. On iOS, this is also called when the server is suspended in the
+ *  background, in which case @c running remains @c YES.
  *
  *  @param server The server instance that stopped.
  */

@@ -87,7 +87,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  *  @discussion Formatted from @c localAddressData using
  *  @c DZWebServerStringFromSockAddr with the service (port) included.
- *  Typical format: @c "192.168.1.10:8080" or @c "[::1]:8080".
+ *  Typical format: @c "192.168.1.10:8080" or @c "::1:8080".
  *
  *  @see localAddressData
  */
@@ -109,7 +109,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  *  @discussion Formatted from @c remoteAddressData using
  *  @c DZWebServerStringFromSockAddr with the service (port) included.
- *  Typical format: @c "10.0.0.5:52341" or @c "[::1]:52341".
+ *  Typical format: @c "10.0.0.5:52341" or @c "::1:52341".
  *
  *  @see remoteAddressData
  */
@@ -154,7 +154,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  8. @c -close
  *
  *  If the request is invalid or processing fails, @c -abortRequest:withStatusCode:
- *  is called instead of steps 4-6.
+ *  is called instead of the remaining steps 4-6.
  *
  *  @warning These methods can be called on any GCD thread. Always call @c super
  *  when overriding them.
@@ -313,7 +313,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  - Malformed or unparseable HTTP headers.
  *  - No registered handler matched the request (status 501 Not Implemented).
  *  - The handler's process block returned @c nil (status 500).
- *  - Body read/write errors during request processing.
+ *  - Request body errors (e.g. failing to open or close the body writer).
  *
  *  The default implementation sends a response consisting solely of the HTTP
  *  status line and standard headers (@c Connection: Close, @c Server, @c Date)

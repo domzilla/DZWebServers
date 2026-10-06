@@ -31,7 +31,7 @@
  *
  *  @discussion DZWebServers is a lightweight, GCD-based HTTP 1.1 server framework
  *  designed for embedding directly in iOS and macOS applications. It requires no
- *  third-party dependencies — only Foundation and CoreServices.
+ *  third-party dependencies — only system frameworks and libraries.
  *
  *  The framework provides three main capabilities:
  *

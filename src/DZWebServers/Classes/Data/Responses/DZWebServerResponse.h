@@ -199,9 +199,9 @@ typedef void (^DZWebServerBodyReaderCompletionBlock)(NSData* _Nullable data, NSE
 /**
  *  @brief The maximum age for client-side caching, in seconds.
  *
- *  Sets the @c Cache-Control HTTP header. A value of @c 0 produces
+ *  Sets the @c Cache-Control HTTP header for 2xx responses. A value of @c 0 produces
  *  @c Cache-Control: no-cache, instructing clients and proxies not to cache
- *  the response. Any positive value produces @c Cache-Control: max-age=N.
+ *  the response. Any positive value produces @c Cache-Control: max-age=N, public.
  *
  *  Defaults to @c 0 (no-cache).
  */
@@ -241,8 +241,8 @@ typedef void (^DZWebServerBodyReaderCompletionBlock)(NSData* _Nullable data, NSE
  *  Defaults to @c NO.
  *
  *  @warning Enabling gzip encoding removes any previously set
- *           @c Content-Length header. The client determines the body length
- *           by reading until the connection closes, per HTTP/1.1 specification.
+ *           @c Content-Length header. The body is sent using chunked transfer
+ *           encoding instead.
  *
  *  @see contentLength
  */
