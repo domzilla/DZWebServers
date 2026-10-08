@@ -390,8 +390,10 @@ static inline BOOL _IsMacFinder(DZWebServerRequest* request) {
   }
 
   NSError* error = nil;
-  if (isMove) {
+  if (existing) {
     [[NSFileManager defaultManager] removeItemAtPath:dstAbsolutePath error:NULL];
+  }
+  if (isMove) {
     if (![[NSFileManager defaultManager] moveItemAtPath:srcAbsolutePath toPath:dstAbsolutePath error:&error]) {
       return [DZWebServerErrorResponse responseWithClientError:kDZWebServerHTTPStatusCode_Forbidden underlyingError:error message:@"Failed copying \"%@\" to \"%@\"", srcRelativePath, dstRelativePath];
     }

@@ -374,14 +374,9 @@ struct DZWebDAVServerTests {
                 try fixture.writeFile("dst.txt", "existing")
 
                 let statusCode = try await fixture.transfer("COPY", from: "src.txt", to: "dst.txt", overwrite: "T")
-                let contents = try fixture.contents("dst.txt")
 
-                withKnownIssue(
-                    "Framework bug: COPY does not remove an existing destination, so the copy fails with 403"
-                ) {
-                    #expect(statusCode == 204)
-                    #expect(contents == Data("source".utf8))
-                }
+                #expect(statusCode == 204)
+                #expect(try fixture.contents("dst.txt") == Data("source".utf8))
             }
         }
     }
