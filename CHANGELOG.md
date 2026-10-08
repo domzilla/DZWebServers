@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - A request whose body fails to be read (socket error, malformed chunk, or write failure) is now rejected with an error status instead of being handled with a truncated body.
 - The RFC 822 and ISO 8601 date functions no longer crash when called before any `DZWebServer` has been used.
 - `DZWebServerRequest.localAddressString` and `remoteAddressString` now return `nil` instead of crashing when the address data has not been set.
+- `DZWebServerDataResponse` JSON initializers now return `nil` for objects that cannot be serialized to JSON instead of raising an exception.
 
 ## [November 2025]
 

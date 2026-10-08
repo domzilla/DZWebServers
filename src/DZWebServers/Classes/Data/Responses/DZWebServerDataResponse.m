@@ -125,9 +125,11 @@
 }
 
 - (instancetype)initWithJSONObject:(id)object contentType:(NSString*)type {
+  if (![NSJSONSerialization isValidJSONObject:object]) {
+    return nil;
+  }
   NSData* data = [NSJSONSerialization dataWithJSONObject:object options:0 error:NULL];
   if (data == nil) {
-    DWS_DNOT_REACHED();
     return nil;
   }
   return [self initWithData:data contentType:type];
