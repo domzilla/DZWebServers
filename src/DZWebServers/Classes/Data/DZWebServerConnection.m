@@ -235,10 +235,12 @@ NS_ASSUME_NONNULL_END
     [self readBodyWithRemainingLength:length
                       completionBlock:^(BOOL success) {
                         NSError* localError = nil;
-                        if ([self->_request performClose:&localError]) {
+                        if (![self->_request performClose:&localError]) {
+                          DWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", self->_socket, localError);
+                          [self abortRequest:self->_request withStatusCode:kDZWebServerHTTPStatusCode_InternalServerError];
+                        } else if (success) {
                           [self _startProcessingRequest];
                         } else {
-                          DWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", self->_socket, error);
                           [self abortRequest:self->_request withStatusCode:kDZWebServerHTTPStatusCode_InternalServerError];
                         }
                       }];
@@ -264,11 +266,13 @@ NS_ASSUME_NONNULL_END
   [self readNextBodyChunk:chunkData
           completionBlock:^(BOOL success) {
             NSError* localError = nil;
-            if ([self->_request performClose:&localError]) {
+            if (![self->_request performClose:&localError]) {
+              DWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", self->_socket, localError);
+              [self abortRequest:self->_request withStatusCode:kDZWebServerHTTPStatusCode_InternalServerError];
+            } else if (success) {
               [self _startProcessingRequest];
             } else {
-              DWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", self->_socket, error);
-              [self abortRequest:self->_request withStatusCode:kDZWebServerHTTPStatusCode_InternalServerError];
+              [self abortRequest:self->_request withStatusCode:kDZWebServerHTTPStatusCode_BadRequest];
             }
           }];
 }

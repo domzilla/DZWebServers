@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - WebDAV COPY and MOVE of a non-existent source now return 404 Not Found instead of 403.
 - WebDAV COPY onto an existing destination now replaces it and returns 204 No Content instead of 403.
 - WebDAV MKCOL on an existing collection now returns 405 Method Not Allowed instead of 500.
+- A request whose body fails to be read (socket error, malformed chunk, or write failure) is now rejected with an error status instead of being handled with a truncated body.
 
 ## [November 2025]
 
