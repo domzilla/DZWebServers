@@ -624,10 +624,8 @@ struct DZWebDAVServerTests {
 
                 let statusCode = try await fixture.transfer(method, from: "source.txt", to: "renamed.exe")
 
-                withKnownIssue("Framework bug: COPY/MOVE never check file extensions") {
-                    #expect(statusCode == 403)
-                    #expect(!fixture.fileExists("renamed.exe"))
-                }
+                #expect(statusCode == 403)
+                #expect(!fixture.fileExists("renamed.exe"))
             }
         }
     }

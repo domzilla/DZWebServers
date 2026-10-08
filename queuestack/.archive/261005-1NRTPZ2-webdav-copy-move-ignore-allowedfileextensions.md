@@ -3,10 +3,11 @@ id: '261005-1NRTPZ2'
 title: WebDAV COPY/MOVE ignore allowedFileExtensions
 author: Dominic Rodemer
 created_at: '2026-10-05T15:17:46.291524Z'
-status: open
+status: closed
 labels:
 - bug
 ---
+
 
 > **Note:** Produced during an autonomous agent run (test-suite review, 2026-10-05) and not verified by a human. This may be totally wrong — analyze and confirm before fixing.
 

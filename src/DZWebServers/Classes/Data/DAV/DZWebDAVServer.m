@@ -358,13 +358,16 @@ static inline BOOL _IsMacFinder(DZWebServerRequest* request) {
     return [DZWebServerErrorResponse responseWithClientError:kDZWebServerHTTPStatusCode_Conflict message:@"Invalid destination \"%@\"", dstRelativePath];
   }
 
+  BOOL isSourceDirectory = NO;
+  [[NSFileManager defaultManager] fileExistsAtPath:srcAbsolutePath isDirectory:&isSourceDirectory];
+
   NSString* srcName = [srcAbsolutePath lastPathComponent];
-  if ((!_allowHiddenItems && [srcName hasPrefix:@"."]) || (!isDirectory && ![self _checkFileExtension:srcName])) {
+  if ((!_allowHiddenItems && [srcName hasPrefix:@"."]) || (!isSourceDirectory && ![self _checkFileExtension:srcName])) {
     return [DZWebServerErrorResponse responseWithClientError:kDZWebServerHTTPStatusCode_Forbidden message:@"%@ from item name \"%@\" is not allowed", isMove ? @"Moving" : @"Copying", srcName];
   }
 
   NSString* dstName = [dstAbsolutePath lastPathComponent];
-  if ((!_allowHiddenItems && [dstName hasPrefix:@"."]) || (!isDirectory && ![self _checkFileExtension:dstName])) {
+  if ((!_allowHiddenItems && [dstName hasPrefix:@"."]) || (!isSourceDirectory && ![self _checkFileExtension:dstName])) {
     return [DZWebServerErrorResponse responseWithClientError:kDZWebServerHTTPStatusCode_Forbidden message:@"%@ to item name \"%@\" is not allowed", isMove ? @"Moving" : @"Copying", dstName];
   }
 

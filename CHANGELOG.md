@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 - Error pages now escape `&`, `<` and `>` in the message and underlying error description, closing a reflected XSS vector.
+- WebDAV COPY and MOVE now reject file names whose extension is not in `allowedFileExtensions`.
 
 ## [November 2025]
 
