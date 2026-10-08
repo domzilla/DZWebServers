@@ -3,10 +3,11 @@ id: '261005-1NRT50D'
 title: WebDAV COPY of missing source returns 403 instead of 404
 author: Dominic Rodemer
 created_at: '2026-10-05T15:17:46.323535Z'
-status: open
+status: closed
 labels:
 - bug
 ---
+
 
 > **Note:** Produced during an autonomous agent run (test-suite review, 2026-10-05) and not verified by a human. This may be totally wrong — analyze and confirm before fixing.
 

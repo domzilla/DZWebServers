@@ -473,9 +473,7 @@ struct DZWebDAVServerTests {
             try await withDAVServer { fixture in
                 let statusCode = try await fixture.transfer(method, from: "ghost.txt", to: "copy.txt")
 
-                withKnownIssue("Framework bug: missing COPY/MOVE source is not checked and fails with 403") {
-                    #expect(statusCode == 404)
-                }
+                #expect(statusCode == 404)
                 #expect(!fixture.fileExists("copy.txt"))
             }
         }

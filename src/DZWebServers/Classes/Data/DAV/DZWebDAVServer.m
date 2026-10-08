@@ -359,7 +359,9 @@ static inline BOOL _IsMacFinder(DZWebServerRequest* request) {
   }
 
   BOOL isSourceDirectory = NO;
-  [[NSFileManager defaultManager] fileExistsAtPath:srcAbsolutePath isDirectory:&isSourceDirectory];
+  if (![[NSFileManager defaultManager] fileExistsAtPath:srcAbsolutePath isDirectory:&isSourceDirectory]) {
+    return [DZWebServerErrorResponse responseWithClientError:kDZWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", srcRelativePath];
+  }
 
   NSString* srcName = [srcAbsolutePath lastPathComponent];
   if ((!_allowHiddenItems && [srcName hasPrefix:@"."]) || (!isSourceDirectory && ![self _checkFileExtension:srcName])) {
