@@ -49,25 +49,23 @@ static dispatch_queue_t _dateFormatterQueue = NULL;
 
 // TODO: Handle RFC 850 and ANSI C's asctime() format
 void DZWebServerInitializeFunctions(void) {
-  DWS_DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
-  if (_dateFormatterRFC822 == nil) {
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
     _dateFormatterRFC822 = [[NSDateFormatter alloc] init];
     _dateFormatterRFC822.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
     _dateFormatterRFC822.dateFormat = @"EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'";
     _dateFormatterRFC822.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
     DWS_DCHECK(_dateFormatterRFC822);
-  }
-  if (_dateFormatterISO8601 == nil) {
+
     _dateFormatterISO8601 = [[NSDateFormatter alloc] init];
     _dateFormatterISO8601.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
     _dateFormatterISO8601.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss'+00:00'";
     _dateFormatterISO8601.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
     DWS_DCHECK(_dateFormatterISO8601);
-  }
-  if (_dateFormatterQueue == NULL) {
+
     _dateFormatterQueue = dispatch_queue_create(NULL, DISPATCH_QUEUE_SERIAL);
     DWS_DCHECK(_dateFormatterQueue);
-  }
+  });
 }
 
 NSString* DZWebServerNormalizeHeaderValue(NSString* value) {
@@ -121,6 +119,7 @@ NSStringEncoding DZWebServerStringEncodingFromCharset(NSString* charset) {
 
 NSString* DZWebServerFormatRFC822(NSDate* date) {
   __block NSString* string;
+  DZWebServerInitializeFunctions();
   dispatch_sync(_dateFormatterQueue, ^{
     string = [_dateFormatterRFC822 stringFromDate:date];
   });
@@ -129,6 +128,7 @@ NSString* DZWebServerFormatRFC822(NSDate* date) {
 
 NSDate* DZWebServerParseRFC822(NSString* string) {
   __block NSDate* date;
+  DZWebServerInitializeFunctions();
   dispatch_sync(_dateFormatterQueue, ^{
     date = [_dateFormatterRFC822 dateFromString:string];
   });
@@ -137,6 +137,7 @@ NSDate* DZWebServerParseRFC822(NSString* string) {
 
 NSString* DZWebServerFormatISO8601(NSDate* date) {
   __block NSString* string;
+  DZWebServerInitializeFunctions();
   dispatch_sync(_dateFormatterQueue, ^{
     string = [_dateFormatterISO8601 stringFromDate:date];
   });
@@ -145,6 +146,7 @@ NSString* DZWebServerFormatISO8601(NSDate* date) {
 
 NSDate* DZWebServerParseISO8601(NSString* string) {
   __block NSDate* date;
+  DZWebServerInitializeFunctions();
   dispatch_sync(_dateFormatterQueue, ^{
     date = [_dateFormatterISO8601 dateFromString:string];
   });

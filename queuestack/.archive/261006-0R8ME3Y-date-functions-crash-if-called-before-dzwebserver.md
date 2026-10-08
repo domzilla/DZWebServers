@@ -3,10 +3,11 @@ id: '261006-0R8ME3Y'
 title: Date functions crash if called before DZWebServer is initialized
 author: Dominic Rodemer
 created_at: '2026-10-06T06:54:12.291809Z'
-status: open
+status: closed
 labels:
 - bug
 ---
+
 
 > **Note:** Agent-generated from an automated doc/code review. This may be a false positive — analyze and confirm against the code before fixing.
 
