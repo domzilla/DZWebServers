@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `DZWebServerFileResponse` now returns `nil` for symbolic links and sockets instead of accepting them as regular files.
 - `DZWebServerStreamedResponse` with gzip content encoding enabled now sends the full body instead of an empty one.
 - Static data GET handlers added with a `nil` content type now serve their data as `application/octet-stream` instead of sending an empty body.
+- Directory GET handlers now apply the configured cache age and range request support to the index file as well.
 
 ## [November 2025]
 

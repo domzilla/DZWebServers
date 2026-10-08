@@ -1056,14 +1056,15 @@ static inline NSString* _EncodeBase64(NSString* string) {
           NSString* filePath = [directoryPath stringByAppendingPathComponent:DZWebServerNormalizePath([request.path substringFromIndex:basePath.length])];
           NSString* fileType = [[[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:NULL] fileType];
           if (fileType) {
-            if ([fileType isEqualToString:NSFileTypeDirectory]) {
-              if (indexFilename) {
-                NSString* indexPath = [filePath stringByAppendingPathComponent:indexFilename];
-                NSString* indexType = [[[NSFileManager defaultManager] attributesOfItemAtPath:indexPath error:NULL] fileType];
-                if ([indexType isEqualToString:NSFileTypeRegular]) {
-                  return [DZWebServerFileResponse responseWithFile:indexPath];
-                }
+            if ([fileType isEqualToString:NSFileTypeDirectory] && indexFilename) {
+              NSString* indexPath = [filePath stringByAppendingPathComponent:indexFilename];
+              NSString* indexType = [[[NSFileManager defaultManager] attributesOfItemAtPath:indexPath error:NULL] fileType];
+              if ([indexType isEqualToString:NSFileTypeRegular]) {
+                filePath = indexPath;
+                fileType = indexType;
               }
+            }
+            if ([fileType isEqualToString:NSFileTypeDirectory]) {
               response = [server _responseWithContentsOfDirectory:filePath];
             } else if ([fileType isEqualToString:NSFileTypeRegular]) {
               if (allowRangeRequests) {
