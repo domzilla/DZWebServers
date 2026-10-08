@@ -185,11 +185,7 @@ struct DZWebServerStreamedResponseTests {
 
             #expect(statusCode == 200)
             #expect(response.value(forHTTPHeaderField: "Content-Encoding") == "gzip")
-            withKnownIssue(
-                "Framework bug: the gzip encoder only forwards sync readData:, so an async stream body comes out empty"
-            ) {
-                #expect(String(data: data, encoding: .utf8) == payload)
-            }
+            #expect(String(data: data, encoding: .utf8) == payload)
         }
 
         @Test("Additional headers set on the stream response are sent to the client")

@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `DZWebServerRequest.localAddressString` and `remoteAddressString` now return `nil` instead of crashing when the address data has not been set.
 - `DZWebServerDataResponse` JSON initializers now return `nil` for objects that cannot be serialized to JSON instead of raising an exception.
 - `DZWebServerFileResponse` now returns `nil` for symbolic links and sockets instead of accepting them as regular files.
+- `DZWebServerStreamedResponse` with gzip content encoding enabled now sends the full body instead of an empty one.
 
 ## [November 2025]
 

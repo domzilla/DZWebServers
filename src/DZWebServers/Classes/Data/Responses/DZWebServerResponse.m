@@ -63,6 +63,16 @@
   return [_reader readData:error];
 }
 
+- (void)asyncReadDataWithCompletion:(DZWebServerBodyReaderCompletionBlock)block {
+  if ([_reader respondsToSelector:@selector(asyncReadDataWithCompletion:)]) {
+    [_reader asyncReadDataWithCompletion:block];
+  } else {
+    NSError* error = nil;
+    NSData* data = [_reader readData:&error];
+    block(data, error);
+  }
+}
+
 - (void)close {
   [_reader close];
 }
@@ -97,6 +107,34 @@
   return YES;
 }
 
+// Deflates "data" into "encodedData", reporting the number of encoded bytes in "length"; empty "data" finishes the stream
+- (BOOL)encodeData:(NSData*)data intoData:(NSMutableData*)encodedData length:(NSUInteger*)length error:(NSError**)error {
+  *length = 0;
+  _stream.next_in = (Bytef*)data.bytes;
+  _stream.avail_in = (uInt)data.length;
+  while (1) {
+    NSUInteger maxLength = encodedData.length - *length;
+    _stream.next_out = (Bytef*)((char*)encodedData.mutableBytes + *length);
+    _stream.avail_out = (uInt)maxLength;
+    int result = deflate(&_stream, data.length ? Z_NO_FLUSH : Z_FINISH);
+    if (result == Z_STREAM_END) {
+      _finished = YES;
+    } else if (result != Z_OK) {
+      if (error) {
+        *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+      }
+      return NO;
+    }
+    *length += maxLength - _stream.avail_out;
+    if (_stream.avail_out > 0) {
+      break;
+    }
+    encodedData.length = 2 * encodedData.length;  // zlib has used all the output buffer so resize it and try again in case more data is available
+  }
+  DWS_DCHECK(_stream.avail_in == 0);
+  return YES;
+}
+
 - (NSData*)readData:(NSError**)error {
   NSMutableData* encodedData;
   if (_finished) {
@@ -113,32 +151,47 @@
       if (data == nil) {
         return nil;
       }
-      _stream.next_in = (Bytef*)data.bytes;
-      _stream.avail_in = (uInt)data.length;
-      while (1) {
-        NSUInteger maxLength = encodedData.length - length;
-        _stream.next_out = (Bytef*)((char*)encodedData.mutableBytes + length);
-        _stream.avail_out = (uInt)maxLength;
-        int result = deflate(&_stream, data.length ? Z_NO_FLUSH : Z_FINISH);
-        if (result == Z_STREAM_END) {
-          _finished = YES;
-        } else if (result != Z_OK) {
-          if (error) {
-            *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
-          }
-          return nil;
-        }
-        length += maxLength - _stream.avail_out;
-        if (_stream.avail_out > 0) {
-          break;
-        }
-        encodedData.length = 2 * encodedData.length;  // zlib has used all the output buffer so resize it and try again in case more data is available
+      if (![self encodeData:data intoData:encodedData length:&length error:error]) {
+        return nil;
       }
-      DWS_DCHECK(_stream.avail_in == 0);
     } while (length == 0);  // Make sure we don't return an empty NSData if not in finished state
     encodedData.length = length;
   }
   return encodedData;
+}
+
+- (void)asyncReadDataWithCompletion:(DZWebServerBodyReaderCompletionBlock)block {
+  if (_finished) {
+    block([NSData data], nil);
+    return;
+  }
+  NSMutableData* encodedData = [[NSMutableData alloc] initWithLength:kGZipInitialBufferSize];
+  if (encodedData == nil) {
+    block(nil, [NSError errorWithDomain:kZlibErrorDomain code:Z_MEM_ERROR userInfo:nil]);
+    return;
+  }
+  [self asyncReadDataIntoData:encodedData completion:block];
+}
+
+- (void)asyncReadDataIntoData:(NSMutableData*)encodedData completion:(DZWebServerBodyReaderCompletionBlock)block {
+  [super asyncReadDataWithCompletion:^(NSData* data, NSError* error) {
+    if (data == nil) {
+      block(nil, error);
+      return;
+    }
+    NSUInteger length = 0;
+    NSError* encodeError = nil;
+    if (![self encodeData:data intoData:encodedData length:&length error:&encodeError]) {
+      block(nil, encodeError);
+      return;
+    }
+    if (length == 0) {  // Make sure we don't return an empty NSData if not in finished state
+      [self asyncReadDataIntoData:encodedData completion:block];
+      return;
+    }
+    encodedData.length = length;
+    block(encodedData, nil);
+  }];
 }
 
 - (void)close {

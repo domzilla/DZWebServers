@@ -28,7 +28,7 @@ Proposed sequence, top to bottom. Check off each sub-item when it is closed.
 - [x] 261006-0R8MQ9D — Request address strings crash when address data is unset (blocked by: none)
 - [x] 261006-0R8M8XB — JSON response initializers raise on invalid objects instead of returning nil (blocked by: none)
 - [x] 261006-0R8MC6W — FileResponse regular-file check uses S_IFREG mask instead of S_ISREG (blocked by: none)
-- [ ] 261005-1NRTP54 — Streamed response with gzip enabled sends empty body (blocked by: none)
+- [x] 261005-1NRTP54 — Streamed response with gzip enabled sends empty body (blocked by: none)
 - [ ] 261006-0R8M7BR — Static data GET handler with nil contentType sends no body (blocked by: none)
 - [ ] 261006-0R8MBVB — Directory handler index file ignores cacheAge and range requests (blocked by: none)
 - [ ] 261005-1NRTKK9 — Port 0: IPv6 bound to IPv4's ephemeral port without checking (EADDRINUSE) (blocked by: none)
