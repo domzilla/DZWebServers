@@ -25,7 +25,7 @@ Proposed sequence, top to bottom. Check off each sub-item when it is closed.
 - [x] 261005-1NRT3WD — WebDAV MKCOL on existing collection returns 500 (blocked by: none)
 - [x] 261006-0R8M0NR — Failed request body read still processes request with truncated body (blocked by: none)
 - [x] 261006-0R8ME3Y — Date functions crash if called before DZWebServer is initialized (blocked by: none)
-- [ ] 261006-0R8MQ9D — Request address strings crash when address data is unset (blocked by: none)
+- [x] 261006-0R8MQ9D — Request address strings crash when address data is unset (blocked by: none)
 - [ ] 261006-0R8M8XB — JSON response initializers raise on invalid objects instead of returning nil (blocked by: none)
 - [ ] 261006-0R8MC6W — FileResponse regular-file check uses S_IFREG mask instead of S_ISREG (blocked by: none)
 - [ ] 261005-1NRTP54 — Streamed response with gzip enabled sends empty body (blocked by: none)

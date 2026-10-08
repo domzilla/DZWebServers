@@ -281,11 +281,11 @@ NSString* const DZWebServerRequestAttribute_RegexCaptures = @"DZWebServerRequest
 }
 
 - (NSString*)localAddressString {
-  return DZWebServerStringFromSockAddr(_localAddressData.bytes, YES);
+  return _localAddressData ? DZWebServerStringFromSockAddr(_localAddressData.bytes, YES) : nil;
 }
 
 - (NSString*)remoteAddressString {
-  return DZWebServerStringFromSockAddr(_remoteAddressData.bytes, YES);
+  return _remoteAddressData ? DZWebServerStringFromSockAddr(_remoteAddressData.bytes, YES) : nil;
 }
 
 - (NSString*)description {

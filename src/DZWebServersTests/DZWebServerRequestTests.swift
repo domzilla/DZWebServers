@@ -302,14 +302,14 @@ struct DZWebServerRequestTests {
             #expect(request.attribute(forKey: DZWebServerRequestAttribute_RegexCaptures) == nil)
         }
 
-        /// localAddressString and remoteAddressString are not tested here: without address data they hit
-        /// DWS_DNOT_REACHED() (abort() in DEBUG).
-        @Test("Directly created request has nil address data")
+        @Test("Directly created request has nil address data and strings")
         func directlyCreatedRequestHasNilAddressData() {
             let request = makeRequest()
 
             #expect(request.localAddressData == nil)
             #expect(request.remoteAddressData == nil)
+            #expect(request.localAddressString == nil)
+            #expect(request.remoteAddressString == nil)
         }
     }
 
