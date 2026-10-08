@@ -3,10 +3,11 @@ id: '261005-1NRT3WD'
 title: WebDAV MKCOL on existing collection returns 500
 author: Dominic Rodemer
 created_at: '2026-10-05T15:17:46.338124Z'
-status: open
+status: closed
 labels:
 - bug
 ---
+
 
 > **Note:** Produced during an autonomous agent run (test-suite review, 2026-10-05) and not verified by a human. This may be totally wrong — analyze and confirm before fixing.
 

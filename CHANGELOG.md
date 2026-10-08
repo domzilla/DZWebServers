@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - WebDAV COPY and MOVE now reject file names whose extension is not in `allowedFileExtensions`.
 - WebDAV COPY and MOVE of a non-existent source now return 404 Not Found instead of 403.
 - WebDAV COPY onto an existing destination now replaces it and returns 204 No Content instead of 403.
+- WebDAV MKCOL on an existing collection now returns 405 Method Not Allowed instead of 500.
 
 ## [November 2025]
 

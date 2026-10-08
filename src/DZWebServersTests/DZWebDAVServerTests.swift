@@ -297,9 +297,7 @@ struct DZWebDAVServerTests {
 
                 let result = try await fixture.send("MKCOL", "existing")
 
-                withKnownIssue("Framework bug: MKCOL on an existing collection returns 500 instead of 405") {
-                    #expect(result.statusCode == 405)
-                }
+                #expect(result.statusCode == 405)
             }
         }
 

@@ -296,6 +296,9 @@ static inline BOOL _IsMacFinder(DZWebServerRequest* request) {
   if (![[NSFileManager defaultManager] fileExistsAtPath:[absolutePath stringByDeletingLastPathComponent] isDirectory:&isDirectory] || !isDirectory) {
     return [DZWebServerErrorResponse responseWithClientError:kDZWebServerHTTPStatusCode_Conflict message:@"Missing intermediate collection(s) for \"%@\"", relativePath];
   }
+  if ([[NSFileManager defaultManager] fileExistsAtPath:absolutePath]) {
+    return [DZWebServerErrorResponse responseWithClientError:kDZWebServerHTTPStatusCode_MethodNotAllowed message:@"MKCOL not allowed on existing resource \"%@\"", relativePath];
+  }
 
   NSString* directoryName = [absolutePath lastPathComponent];
   if (!_allowHiddenItems && [directoryName hasPrefix:@"."]) {
