@@ -49,6 +49,7 @@
 #endif
 
 #define kBonjourResolutionTimeout 5.0
+#define kMaxEphemeralPortAttempts 10
 
 NSString* const DZWebServerOption_Port = @"Port";
 NSString* const DZWebServerOption_BonjourName = @"BonjourName";
@@ -515,36 +516,51 @@ static inline NSString* _EncodeBase64(NSString* string) {
   BOOL bindToLocalhost = [(NSNumber*)_GetOption(_options, DZWebServerOption_BindToLocalhost, @NO) boolValue];
   NSUInteger maxPendingConnections = [(NSNumber*)_GetOption(_options, DZWebServerOption_MaxPendingConnections, @16) unsignedIntegerValue];
 
-  struct sockaddr_in addr4;
-  bzero(&addr4, sizeof(addr4));
-  addr4.sin_len = sizeof(addr4);
-  addr4.sin_family = AF_INET;
-  addr4.sin_port = htons(port);
-  addr4.sin_addr.s_addr = bindToLocalhost ? htonl(INADDR_LOOPBACK) : htonl(INADDR_ANY);
-  int listeningSocket4 = [self _createListeningSocket:NO localAddress:&addr4 length:sizeof(addr4) maxPendingConnections:maxPendingConnections error:error];
-  if (listeningSocket4 <= 0) {
-    return NO;
-  }
-  if (port == 0) {
-    struct sockaddr_in addr;
-    socklen_t addrlen = sizeof(addr);
-    if (getsockname(listeningSocket4, (struct sockaddr*)&addr, &addrlen) == 0) {
-      port = ntohs(addr.sin_port);
-    } else {
-      DWS_LOG_ERROR(@"Failed retrieving socket address: %s (%i)", strerror(errno), errno);
+  NSUInteger requestedPort = port;
+  int listeningSocket4 = -1;
+  int listeningSocket6 = -1;
+  NSUInteger attempt = 0;
+  while (listeningSocket6 <= 0) {
+    struct sockaddr_in addr4;
+    bzero(&addr4, sizeof(addr4));
+    addr4.sin_len = sizeof(addr4);
+    addr4.sin_family = AF_INET;
+    addr4.sin_port = htons(requestedPort);
+    addr4.sin_addr.s_addr = bindToLocalhost ? htonl(INADDR_LOOPBACK) : htonl(INADDR_ANY);
+    listeningSocket4 = [self _createListeningSocket:NO localAddress:&addr4 length:sizeof(addr4) maxPendingConnections:maxPendingConnections error:error];
+    if (listeningSocket4 <= 0) {
+      return NO;
     }
-  }
+    port = requestedPort;
+    if (port == 0) {
+      struct sockaddr_in addr;
+      socklen_t addrlen = sizeof(addr);
+      if (getsockname(listeningSocket4, (struct sockaddr*)&addr, &addrlen) == 0) {
+        port = ntohs(addr.sin_port);
+      } else {
+        DWS_LOG_ERROR(@"Failed retrieving socket address: %s (%i)", strerror(errno), errno);
+      }
+    }
 
-  struct sockaddr_in6 addr6;
-  bzero(&addr6, sizeof(addr6));
-  addr6.sin6_len = sizeof(addr6);
-  addr6.sin6_family = AF_INET6;
-  addr6.sin6_port = htons(port);
-  addr6.sin6_addr = bindToLocalhost ? in6addr_loopback : in6addr_any;
-  int listeningSocket6 = [self _createListeningSocket:YES localAddress:&addr6 length:sizeof(addr6) maxPendingConnections:maxPendingConnections error:error];
-  if (listeningSocket6 <= 0) {
-    close(listeningSocket4);
-    return NO;
+    struct sockaddr_in6 addr6;
+    bzero(&addr6, sizeof(addr6));
+    addr6.sin6_len = sizeof(addr6);
+    addr6.sin6_family = AF_INET6;
+    addr6.sin6_port = htons(port);
+    addr6.sin6_addr = bindToLocalhost ? in6addr_loopback : in6addr_any;
+    NSError* socketError = nil;
+    listeningSocket6 = [self _createListeningSocket:YES localAddress:&addr6 length:sizeof(addr6) maxPendingConnections:maxPendingConnections error:&socketError];
+    if (listeningSocket6 <= 0) {
+      close(listeningSocket4);
+      // The ephemeral port picked for IPv4 isn't guaranteed to be free on IPv6, so pick a new one
+      if (requestedPort == 0 && socketError.code == EADDRINUSE && ++attempt < kMaxEphemeralPortAttempts) {
+        continue;
+      }
+      if (error) {
+        *error = socketError;
+      }
+      return NO;
+    }
   }
 
   _serverName = [(NSString*)_GetOption(_options, DZWebServerOption_ServerName, NSStringFromClass([self class])) copy];

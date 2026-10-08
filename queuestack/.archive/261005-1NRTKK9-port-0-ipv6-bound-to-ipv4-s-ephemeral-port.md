@@ -3,10 +3,11 @@ id: '261005-1NRTKK9'
 title: 'Port 0: IPv6 bound to IPv4''s ephemeral port without checking (EADDRINUSE)'
 author: Dominic Rodemer
 created_at: '2026-10-05T15:17:46.383233Z'
-status: open
+status: closed
 labels:
 - bug
 ---
+
 
 > **Note:** Produced during an autonomous agent run (test-suite review, 2026-10-05) and not verified by a human. This may be totally wrong — analyze and confirm before fixing.
 

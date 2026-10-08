@@ -21,20 +21,8 @@ enum TestSupport {
     /// Ephemeral session so no cookies, credentials or cached responses leak between tests.
     static let session = URLSession(configuration: .ephemeral)
 
-    /// Starts the server, retrying on EADDRINUSE. Framework bug: with port 0, `DZWebServer` binds IPv6 to the
-    /// port the OS picked for IPv4 without that port being free on IPv6, so parallel runs can collide.
     static func start(_ server: DZWebServer, options: [String: Any] = localhostOptions) throws {
-        var attempt = 1
-        while true {
-            do {
-                try server.start(options: options)
-                return
-            } catch let error as NSError
-                where error.domain == NSPOSIXErrorDomain && error.code == Int(EADDRINUSE) && attempt < 5
-            {
-                attempt += 1
-            }
-        }
+        try server.start(options: options)
     }
 
     /// Creates a unique, empty directory inside the temporary directory. The caller removes it.
