@@ -985,7 +985,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
                        path:path
                requestClass:[DZWebServerRequest class]
                processBlock:^DZWebServerResponse*(DZWebServerRequest* request) {
-                 DZWebServerResponse* response = [DZWebServerDataResponse responseWithData:staticData contentType:contentType];
+                 DZWebServerResponse* response = [DZWebServerDataResponse responseWithData:staticData contentType:(contentType ? contentType : kDZWebServerDefaultMimeType)];
                  response.cacheControlMaxAge = cacheAge;
                  return response;
                }];

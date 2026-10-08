@@ -934,7 +934,8 @@ extern NSString* const DZWebServerAuthenticationMethod_DigestAccess;
  *
  *  @param path        The URL path to match (must start with @c @@"/").
  *  @param staticData  The data to serve as the response body.
- *  @param contentType The MIME type for the @c Content-Type header, or @c nil.
+ *  @param contentType The MIME type for the @c Content-Type header, or @c nil
+ *                     to use @c "application/octet-stream".
  *  @param cacheAge    The @c Cache-Control max-age value in seconds. Pass @c 0
  *                     to disable caching.
  *
