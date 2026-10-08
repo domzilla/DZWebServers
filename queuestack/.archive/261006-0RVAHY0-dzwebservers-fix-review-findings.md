@@ -3,11 +3,10 @@ id: '261006-0RVAHY0'
 title: 'DZWebServers: fix review findings'
 author: Dominic Rodemer
 created_at: '2026-10-06T07:04:10.256476Z'
-status: open
+status: closed
 labels:
 - master
 ---
-
 
 
 ## Overview
@@ -33,4 +32,4 @@ Proposed sequence, top to bottom. Check off each sub-item when it is closed.
 - [x] 261006-0R8MBVB — Directory handler index file ignores cacheAge and range requests (blocked by: none)
 - [x] 261005-1NRTKK9 — Port 0: IPv6 bound to IPv4's ephemeral port without checking (EADDRINUSE) (blocked by: none)
 - [x] 261005-1NRTB5E — URL-encoded form parser mishandles leading & and empty keys (blocked by: none)
-- [ ] 261006-0R8M31C — Nonnull properties can be nil (DataRequest.data, form arguments, uploader strings) (blocked by: none)
+- [x] 261006-0R8M31C — Nonnull properties can be nil (DataRequest.data, form arguments, uploader strings) (blocked by: none)

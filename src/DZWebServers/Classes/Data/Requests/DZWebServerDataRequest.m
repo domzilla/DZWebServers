@@ -64,6 +64,10 @@
   return YES;
 }
 
+- (NSMutableData*)data {
+  return _data ?: [NSMutableData data];
+}
+
 - (NSString*)description {
   NSMutableString* description = [NSMutableString stringWithString:[super description]];
   if (_data) {

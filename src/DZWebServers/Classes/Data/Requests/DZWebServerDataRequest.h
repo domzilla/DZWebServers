@@ -57,7 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  is available after the connection has finished receiving the request body
  *  (i.e. after the @c DZWebServerBodyWriter protocol methods have completed).
  *
- *  This is @c nil until the body has started to be received, so it remains @c nil
+ *  This is empty until the body has started to be received, so it remains empty
  *  for requests without a body.
  */
 @property(nonatomic, copy, readonly) NSData* data;

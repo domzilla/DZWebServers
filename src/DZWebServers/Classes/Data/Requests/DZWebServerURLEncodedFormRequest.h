@@ -65,7 +65,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * This property is populated after the request body has been fully received and
  * processed (i.e., after @c -close: completes successfully). Accessing it before
- * that point returns @c nil.
+ * that point, or on a request without a body, returns an empty dictionary.
  *
  * @note Duplicate form control names are not supported; if the encoded form contains
  *       multiple values for the same name, only one will be retained.

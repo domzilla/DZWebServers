@@ -33,6 +33,8 @@
 
 @implementation DZWebServerURLEncodedFormRequest
 
+@synthesize arguments = _arguments;
+
 + (NSString*)mimeType {
   return @"application/x-www-form-urlencoded";
 }
@@ -46,6 +48,10 @@
   NSString* string = [[NSString alloc] initWithData:self.data encoding:DZWebServerStringEncodingFromCharset(charset)];
   _arguments = DZWebServerParseURLEncodedForm(string);
   return YES;
+}
+
+- (NSDictionary<NSString*, NSString*>*)arguments {
+  return _arguments ?: @{};
 }
 
 - (NSString*)description {

@@ -49,6 +49,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@interface DZWebUploader ()
+@property(nonatomic) NSBundle* siteBundle;
+@end
+
 @interface DZWebUploader (Methods)
 - (nullable DZWebServerResponse*)listDirectory:(DZWebServerRequest*)request;
 - (nullable DZWebServerResponse*)downloadFile:(DZWebServerRequest*)request;
@@ -75,6 +79,7 @@ NS_ASSUME_NONNULL_END
       return nil;
     }
     _uploadDirectory = [path copy];
+    _siteBundle = siteBundle;
     DZWebUploader* __unsafe_unretained server = self;
 
     // Resource files
@@ -91,53 +96,18 @@ NS_ASSUME_NONNULL_END
 #else
           NSString* device = CFBridgingRelease(SCDynamicStoreCopyComputerName(NULL, NULL));
 #endif
-                   NSString* title = server.title;
-                   if (title == nil) {
-                     title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
-                     if (title == nil) {
-                       title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
-                     }
-#if !TARGET_OS_IPHONE
-                     if (title == nil) {
-                       title = [[NSProcessInfo processInfo] processName];
-                     }
-#endif
-                   }
-                   NSString* header = server.header;
-                   if (header == nil) {
-                     header = title;
-                   }
-                   NSString* prologue = server.prologue;
-                   if (prologue == nil) {
-                     prologue = [siteBundle localizedStringForKey:@"PROLOGUE" value:@"" table:nil];
-                   }
                    NSString* epilogue = server.epilogue;
                    if (epilogue == nil) {
                      epilogue = [siteBundle localizedStringForKey:@"EPILOGUE" value:@"" table:nil];
                    }
-                   NSString* footer = server.footer;
-                   if (footer == nil) {
-                     NSString* name = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
-                     if (name == nil) {
-                       name = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
-                     }
-                     NSString* version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-#if !TARGET_OS_IPHONE
-                     if (!name && !version) {
-                       name = @"OS X";
-                       version = [[NSProcessInfo processInfo] operatingSystemVersionString];
-                     }
-#endif
-                     footer = [NSString stringWithFormat:[siteBundle localizedStringForKey:@"FOOTER_FORMAT" value:@"" table:nil], name, version];
-                   }
                    return [DZWebServerDataResponse responseWithHTMLTemplate:(NSString*)[siteBundle pathForResource:@"index" ofType:@"html"]
                                                                    variables:@{
                                                                      @"device" : device,
-                                                                     @"title" : title,
-                                                                     @"header" : header,
-                                                                     @"prologue" : prologue,
+                                                                     @"title" : server.title,
+                                                                     @"header" : server.header,
+                                                                     @"prologue" : server.prologue,
                                                                      @"epilogue" : epilogue,
-                                                                     @"footer" : footer
+                                                                     @"footer" : server.footer
                                                                    }];
                  }];
 
@@ -190,6 +160,48 @@ NS_ASSUME_NONNULL_END
                  }];
   }
   return self;
+}
+
+- (NSString*)title {
+  if (_title) {
+    return _title;
+  }
+  NSString* title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+  if (title == nil) {
+    title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
+  }
+#if !TARGET_OS_IPHONE
+  if (title == nil) {
+    title = [[NSProcessInfo processInfo] processName];
+  }
+#endif
+  return title;
+}
+
+- (NSString*)header {
+  return _header ?: self.title;
+}
+
+- (NSString*)prologue {
+  return _prologue ?: [_siteBundle localizedStringForKey:@"PROLOGUE" value:@"" table:nil];
+}
+
+- (NSString*)footer {
+  if (_footer) {
+    return _footer;
+  }
+  NSString* name = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+  if (name == nil) {
+    name = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
+  }
+  NSString* version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+#if !TARGET_OS_IPHONE
+  if (!name && !version) {
+    name = @"OS X";
+    version = [[NSProcessInfo processInfo] operatingSystemVersionString];
+  }
+#endif
+  return [NSString stringWithFormat:[_siteBundle localizedStringForKey:@"FOOTER_FORMAT" value:@"" table:nil], name, version];
 }
 
 @end

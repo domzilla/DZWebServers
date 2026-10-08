@@ -158,14 +158,10 @@ struct DZWebUploaderTests {
         @Test("title, header, prologue and footer return their documented defaults")
         func textPropertiesReturnDocumentedDefaults() {
             let uploader = self.fixture.uploader
-            withKnownIssue(
-                "Framework bug: declared nonnull with documented defaults, but the getters return nil until set"
-            ) {
-                #expect(!uploader.title.isEmpty)
-                #expect(uploader.header == uploader.title)
-                #expect(!uploader.prologue.isEmpty)
-                #expect(!uploader.footer.isEmpty)
-            }
+            #expect(!uploader.title.isEmpty)
+            #expect(uploader.header == uploader.title)
+            #expect(!uploader.prologue.isEmpty)
+            #expect(!uploader.footer.isEmpty)
         }
     }
 

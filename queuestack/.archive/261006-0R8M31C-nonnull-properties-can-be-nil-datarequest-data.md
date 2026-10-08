@@ -3,10 +3,11 @@ id: '261006-0R8M31C'
 title: Nonnull properties can be nil (DataRequest.data, form arguments, uploader strings)
 author: Dominic Rodemer
 created_at: '2026-10-06T06:54:12.305061Z'
-status: open
+status: closed
 labels:
 - bug
 ---
+
 
 > **Note:** Agent-generated from an automated doc/code review. This may be a false positive — analyze and confirm against the code before fixing.
 

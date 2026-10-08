@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Directory GET handlers now apply the configured cache age and range request support to the index file as well.
 - Starting on port 0 no longer fails intermittently with "address already in use" when the ephemeral port picked for IPv4 is taken on IPv6.
 - URL-encoded forms and query strings now skip leading and repeated `&` separators and no longer drop every pair after an empty key.
+- `DZWebServerDataRequest.data` and `DZWebServerURLEncodedFormRequest.arguments` now return empty values instead of `nil` for requests without a body, and `DZWebUploader` `title`, `header`, `prologue` and `footer` now return their documented defaults instead of `nil` when not set.
 
 ## [November 2025]
 
