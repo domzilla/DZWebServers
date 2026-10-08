@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Static data GET handlers added with a `nil` content type now serve their data as `application/octet-stream` instead of sending an empty body.
 - Directory GET handlers now apply the configured cache age and range request support to the index file as well.
 - Starting on port 0 no longer fails intermittently with "address already in use" when the ephemeral port picked for IPv4 is taken on IPv6.
+- URL-encoded forms and query strings now skip leading and repeated `&` separators and no longer drop every pair after an empty key.
 
 ## [November 2025]
 

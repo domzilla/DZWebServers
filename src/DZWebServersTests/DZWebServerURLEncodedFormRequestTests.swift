@@ -176,18 +176,14 @@ struct DZWebServerURLEncodedFormRequestTests {
         func emptySequencesAreSkipped(body: String) async throws {
             let request = try await submitForm(body)
 
-            withKnownIssue("Framework bug: DZWebServerParseURLEncodedForm folds stray '&' into the next key") {
-                #expect(request.arguments == ["a": "1", "b": "2"])
-            }
+            #expect(request.arguments == ["a": "1", "b": "2"])
         }
 
         @Test("Empty key is parsed and does not drop the following pairs")
         func emptyKeyIsParsed() async throws {
             let request = try await submitForm("=value&a=1")
 
-            withKnownIssue("Framework bug: DZWebServerParseURLEncodedForm stops at a pair with an empty key") {
-                #expect(request.arguments == ["": "value", "a": "1"])
-            }
+            #expect(request.arguments == ["": "value", "a": "1"])
         }
 
         @Test("10,000 character value is preserved in full")

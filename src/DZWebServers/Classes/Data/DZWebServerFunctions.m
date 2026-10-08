@@ -209,12 +209,20 @@ NSDictionary<NSString*, NSString*>* DZWebServerParseURLEncodedForm(NSString* for
   NSMutableDictionary* parameters = [NSMutableDictionary dictionary];
   NSScanner* scanner = [[NSScanner alloc] initWithString:form];
   [scanner setCharactersToBeSkipped:nil];
-  while (1) {
+  while (![scanner isAtEnd]) {
+    if ([scanner scanString:@"&" intoString:NULL]) {
+      continue;
+    }
+
     NSString* key = nil;
-    if (![scanner scanUpToString:@"=" intoString:&key] || [scanner isAtEnd]) {
+    [scanner scanUpToString:@"=" intoString:&key];
+    if ([scanner isAtEnd]) {
       break;
     }
     [scanner setScanLocation:([scanner scanLocation] + 1)];
+    if (key == nil) {
+      key = @"";
+    }
 
     NSString* value = nil;
     [scanner scanUpToString:@"&" intoString:&value];
@@ -232,11 +240,6 @@ NSDictionary<NSString*, NSString*>* DZWebServerParseURLEncodedForm(NSString* for
       DWS_LOG_WARNING(@"Failed parsing URL encoded form for key \"%@\" and value \"%@\"", key, value);
       DWS_DNOT_REACHED();
     }
-
-    if ([scanner isAtEnd]) {
-      break;
-    }
-    [scanner setScanLocation:([scanner scanLocation] + 1)];
   }
   return parameters;
 }
