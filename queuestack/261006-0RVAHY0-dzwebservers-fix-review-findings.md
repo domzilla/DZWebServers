@@ -18,7 +18,7 @@ Fix the bugs found by the 2026-10-05 test-suite review and the 2026-10-06 doc/co
 
 Proposed sequence, top to bottom. Check off each sub-item when it is closed.
 
-- [ ] 261005-1NRT3NF — Error response HTML only escapes quotes (reflected XSS) (blocked by: none)
+- [x] 261005-1NRT3NF — Error response HTML only escapes quotes (reflected XSS) (blocked by: none)
 - [ ] 261005-1NRTPZ2 — WebDAV COPY/MOVE ignore allowedFileExtensions (blocked by: none)
 - [ ] 261005-1NRT50D — WebDAV COPY of missing source returns 403 instead of 404 (blocked by: 261005-1NRTPZ2)
 - [ ] 261005-1NRTAKP — WebDAV COPY onto existing destination returns 403 (blocked by: none)

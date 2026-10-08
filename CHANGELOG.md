@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Tightened Swift interoperability across all public headers, including nullability, copy semantics, and Swift-friendly naming.
 - Modernized `DZWebServerOption_DispatchQueuePriority` default to `QOS_CLASS_DEFAULT`; legacy priority values continue to work.
 
+### Fixed
+- Error pages now escape `&`, `<` and `>` in the message and underlying error description, closing a reflected XSS vector.
+
 ## [November 2025]
 
 ### Changed

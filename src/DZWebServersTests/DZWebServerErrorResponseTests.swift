@@ -214,10 +214,8 @@ struct DZWebServerErrorResponseTests {
             )
             let html = try html(of: response)
 
-            withKnownIssue("Framework bug: _EscapeHTMLString only escapes double quotes, not <, > and &") {
-                #expect(html.contains("&lt;script&gt;alert('xss')&lt;/script&gt; &amp; more"))
-                #expect(!html.contains("<script>"))
-            }
+            #expect(html.contains("&lt;script&gt;alert('xss')&lt;/script&gt; &amp; more"))
+            #expect(!html.contains("<script>"))
         }
     }
 }

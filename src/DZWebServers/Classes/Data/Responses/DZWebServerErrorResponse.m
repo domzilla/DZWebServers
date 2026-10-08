@@ -91,7 +91,12 @@
 #pragma mark ---
 
 static inline NSString* _EscapeHTMLString(NSString* string) {
-  return [string stringByReplacingOccurrencesOfString:@"\"" withString:@"&quot;"];
+  NSMutableString* escaped = [string mutableCopy];
+  [escaped replaceOccurrencesOfString:@"&" withString:@"&amp;" options:0 range:NSMakeRange(0, escaped.length)];
+  [escaped replaceOccurrencesOfString:@"<" withString:@"&lt;" options:0 range:NSMakeRange(0, escaped.length)];
+  [escaped replaceOccurrencesOfString:@">" withString:@"&gt;" options:0 range:NSMakeRange(0, escaped.length)];
+  [escaped replaceOccurrencesOfString:@"\"" withString:@"&quot;" options:0 range:NSMakeRange(0, escaped.length)];
+  return escaped;
 }
 
 - (instancetype)initWithStatusCode:(NSInteger)statusCode underlyingError:(NSError*)underlyingError formattedMessage:(NSString*)message {
